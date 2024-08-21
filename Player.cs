@@ -1,25 +1,41 @@
 namespace diep;
 using Godot;
-using System;
 
 public partial class Player : CharacterBody2D
 {
 	/// <summary>
-	/// abilities that will can be upgraded over time
+	/// abilities that can be upgraded over time as the tank destroys some target enemies
 	/// </summary>
 	[Export]
 	public int Speed = 200;
 
 	[Export]
-	public int ShootRate = 1;
+	public int ShootRate = 10;
 
+	[Export]
+	public PackedScene TargetScene = (PackedScene)ResourceLoader.Load("res://Target.tscn");
+
+	[Export]
+	public int TargetSpawnRange = 300;
+
+	[Export]
+	public int NumberOfTargetsToSpawn = 5;
+	
 	private float _shootTimer;
 	private PackedScene _bulletScene;
+	private Timer _spawnTimer;
+	
 
 	public override void _Ready()
 	{
 		_bulletScene = ResourceLoader.Load<PackedScene>("res://Bullet.tscn");
 		_shootTimer = 0;
+
+		_spawnTimer = new Timer();
+		_spawnTimer.OneShot = true;
+		AddChild(_spawnTimer);
+		_spawnTimer.Timeout += SpawnSingleTarget;
+		ScheduleNextSpawn();
 	}
 
 	public override void _Process(double delta)
@@ -39,8 +55,8 @@ public partial class Player : CharacterBody2D
 	private Vector2 GetInput()
 	{
 		Vector2 inputVector = Vector2.Zero;
-		
-		// handles wasd as well as arrows
+
+		// handles WASD input as well as arrows
 		if (Input.IsActionPressed("move_right"))
 			inputVector.X += 1;
 		if (Input.IsActionPressed("move_left"))
@@ -49,24 +65,54 @@ public partial class Player : CharacterBody2D
 			inputVector.Y += 1;
 		if (Input.IsActionPressed("move_up"))
 			inputVector.Y -= 1;
-			
+
 		return inputVector.Normalized() * Speed;
 	}
 
 	private void Shoot()
-    {
-        Vector2 mousePosition = GetGlobalMousePosition();
-        Vector2 direction = (mousePosition - GlobalPosition).Normalized();
+	{
+		Vector2 mousePosition = GetGlobalMousePosition();
+		Vector2 direction = (mousePosition - GlobalPosition).Normalized();
 
-        var bullet = _bulletScene.Instantiate<Area2D>();
-        bullet.Position = GlobalPosition;
-        bullet.Rotation = direction.Angle();
+		var bullet = _bulletScene.Instantiate<Area2D>();
+		bullet.GlobalPosition = GlobalPosition;
+		bullet.Rotation = direction.Angle();
 
-        if (bullet is Bullet bulletScript)
-        {
-            bulletScript.Direction = direction;
-        }
+		if (bullet is Bullet bulletScript)
+		{
+			bulletScript.Direction = direction;
+		}
 
-        GetParent().AddChild(bullet);
-    }
+		GetParent().AddChild(bullet);
+	}
+	private void ScheduleNextSpawn()
+	{
+		RandomNumberGenerator rng = new RandomNumberGenerator();
+		rng.Randomize();
+
+		float randomInterval = rng.RandfRange(5.0f, 10.0f);
+
+		_spawnTimer.WaitTime = randomInterval;
+		_spawnTimer.Start();
+	}
+
+	private void SpawnSingleTarget()
+	{
+		RandomNumberGenerator rng = new RandomNumberGenerator();
+		rng.Randomize();
+
+		Vector2 randomOffset = new Vector2(
+			rng.RandfRange(-TargetSpawnRange, TargetSpawnRange),
+			rng.RandfRange(-TargetSpawnRange, TargetSpawnRange)
+		);
+
+		Vector2 targetPosition = GlobalPosition + randomOffset;
+
+		var target = TargetScene.Instantiate<Node2D>();
+		target.GlobalPosition = targetPosition;
+
+		GetParent().CallDeferred("add_child", target);
+		ScheduleNextSpawn();
+	}
+
 }

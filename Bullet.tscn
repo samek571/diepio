@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://b6kcax67l5t0v"]
+[gd_scene load_steps=5 format=3 uid="uid://cittj1pkgo34c"]
 
 [ext_resource type="Script" path="res://Bullet.cs" id="1_n5r5g"]
 
@@ -8,7 +8,7 @@
 
 [sub_resource type="GradientTexture1D" id="GradientTexture1D_avv1n"]
 gradient = SubResource("Gradient_j58la")
-width = 5
+width = 10
 
 [node name="Area2D" type="Area2D"]
 script = ExtResource("1_n5r5g")

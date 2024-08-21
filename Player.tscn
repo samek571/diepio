@@ -1,18 +1,22 @@
-[gd_scene load_steps=4 format=3 uid="uid://codxyew2nrfov"]
+[gd_scene load_steps=4 format=3 uid="uid://041gi234tncv"]
 
 [ext_resource type="Script" path="res://Player.cs" id="1_d7svq"]
 [ext_resource type="Texture2D" uid="uid://lm2s4ef6y47m" path="res://icon.svg" id="2_5verk"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_exke4"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sywph"]
+size = Vector2(125, 125)
 
 [node name="CharacterBody2D" type="CharacterBody2D"]
 script = ExtResource("1_d7svq")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(1, -3)
 texture = ExtResource("2_5verk")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_exke4")
+shape = SubResource("RectangleShape2D_sywph")
 debug_color = Color(0.84612, 0.294808, 0.604185, 0.42)
 
 [node name="Marker2D" type="Marker2D" parent="."]
+
+[node name="Camera2D" type="Camera2D" parent="."]
