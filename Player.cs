@@ -59,9 +59,9 @@ public partial class Player : RigidBody2D
 		ContactMonitor = true;
 		MaxContactsReported = 5;
 		_collisionCooldownTimer = new Timer();
-		AddChild(_collisionCooldownTimer);
 		_collisionCooldownTimer.WaitTime = 0.2f;
 		_collisionCooldownTimer.OneShot = true;
+		AddChild(_collisionCooldownTimer);
 		_collisionCooldownTimer.Timeout += () => _collisionCooldown = false;
 	}
 	public override void _Process(double delta)
@@ -110,17 +110,18 @@ public partial class Player : RigidBody2D
 		if (_collisionCooldown)
 			return;
 		
-		int damage = 5;
-		TakeDamage(damage);
-		target.Call("TakeDamage", damage);
+		TakeDamage(BodyDamage);
+		target.Call("TakeDamage", BodyDamage);
 
-		Vector2 collisionDirection = GlobalPosition.DirectionTo(target.GlobalPosition);
+		Vector2 collisionDirection = GlobalPosition.DirectionTo(target.GlobalPosition).Normalized();
 		float playerBounceStrength = 300f;
 		float targetBounceStrength = 5000f;
 
 		ApplyCentralImpulse(collisionDirection * playerBounceStrength);
 		target.ApplyCentralImpulse(collisionDirection * targetBounceStrength);
 		Rotation = 0;
+		AngularVelocity = 0;
+
 		_collisionCooldown = true;
 		_collisionCooldownTimer.Start();
 		GD.Print($"Player took damage, has {_currentHP} HP, and was bounced away from the target!");
