@@ -1,20 +1,32 @@
 namespace diep;
 using Godot;
+using System;
 
 public partial class Bullet : Area2D
 {
 	[Export]
-	public int Speed = 400;
+	public float Speed = 400f;
 
-	public Vector2 Direction { get; set; } = Vector2.Zero;
+	[Export]
+	public int Strength = 20;
 
-	public override void _PhysicsProcess(double delta)
+	public Vector2 Direction;
+	
+	public override void _Ready()
 	{
-		Position += Direction * Speed * (float)delta;
+		this.BodyEntered += OnBulletBodyEntered;
+	}
+	public override void _Process(double delta)
+	{
+		Position += Direction * (float)delta * Speed;
 	}
 
-	public void _on_Bullet_body_entered(Node body)
+	private void OnBulletBodyEntered(Node body)
 	{
-		QueueFree();
+		if (body is Target target)
+		{
+			target.TakeDamage(Strength);
+			QueueFree();
+		}
 	}
 }

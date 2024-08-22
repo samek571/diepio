@@ -18,12 +18,10 @@ public partial class Player : CharacterBody2D
 	[Export]
 	public int TargetSpawnRange = 300;
 
-	[Export]
-	public int NumberOfTargetsToSpawn = 5;
-	
 	private float _shootTimer;
 	private PackedScene _bulletScene;
 	private Timer _spawnTimer;
+	private int _currentXP = 0;
 	
 
 	public override void _Ready()
@@ -74,7 +72,7 @@ public partial class Player : CharacterBody2D
 		Vector2 mousePosition = GetGlobalMousePosition();
 		Vector2 direction = (mousePosition - GlobalPosition).Normalized();
 
-		var bullet = _bulletScene.Instantiate<Area2D>();
+		var bullet = _bulletScene.Instantiate<Bullet>();
 		bullet.GlobalPosition = GlobalPosition;
 		bullet.Rotation = direction.Angle();
 
@@ -85,12 +83,18 @@ public partial class Player : CharacterBody2D
 
 		GetParent().AddChild(bullet);
 	}
+	public void AddXP(int xp)
+	{
+		_currentXP += xp;
+		GD.Print($"XP Added: {xp}. Total XP: {_currentXP}");
+	}
+	
 	private void ScheduleNextSpawn()
 	{
 		RandomNumberGenerator rng = new RandomNumberGenerator();
 		rng.Randomize();
 
-		float randomInterval = rng.RandfRange(5.0f, 10.0f);
+		float randomInterval = rng.RandfRange(1.0f, 2.0f); //tweak this --------------------------------
 
 		_spawnTimer.WaitTime = randomInterval;
 		_spawnTimer.Start();
