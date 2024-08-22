@@ -3,60 +3,91 @@ using Godot;
 
 public partial class Player : RigidBody2D
 {
-	/// <summary>
-	/// abilities that can be upgraded over time as the tank destroys some target enemies
-	/// </summary>
-	[Export]
-	public int Speed = 200;
+	//diep stats
+	[Export] public float HealingAmount = 0.1f;
+	[Export] public float Health = 100f;
+	[Export] public int BodyDamage = 5;
+	[Export] public float BulletSpeed = 400f;
+	[Export] public int BulletDamage = 20;
+	[Export] public int ShootRate = 10;
+	[Export] public int Speed = 200;
 
-	[Export]
-	public int ShootRate = 10;
+	
+	[Export] public PackedScene TargetScene = (PackedScene)ResourceLoader.Load("res://Target.tscn");
+	[Export] public int TargetSpawnRange = 300;
 
-	[Export]
-	public PackedScene TargetScene = (PackedScene)ResourceLoader.Load("res://Target.tscn");
-
-	[Export]
-	public int TargetSpawnRange = 300;
-
+	private bool _autoShootEnabled;
 	private float _shootTimer;
 	private PackedScene _bulletScene;
 	private Timer _spawnTimer;
-	private bool _autoShootEnabled = false;
-	private int _currentXP = 0;
-	private int _currentHP = 1000;
+	private int _currentXP;
+	
+	//collisions
 	private bool _collisionCooldown = false;
 	private Timer _collisionCooldownTimer;
+	
+	//healing
+	private float _currentHP = 100;
+	float TimeToStartHealing = 3.0f;
+	private float _timeSinceLastDamage;
+	private bool _isHealing;
+	private Timer _healingTimer;
 
 
 	public override void _Ready()
 	{
+		GravityScale = 0;
+		
 		_bulletScene = ResourceLoader.Load<PackedScene>("res://Bullet.tscn");
 		
-		GravityScale = 0;
-
+		//shooting
 		_shootTimer = 0;
 		_spawnTimer = new Timer();
 		_spawnTimer.OneShot = true;
 		AddChild(_spawnTimer);
 		_spawnTimer.Timeout += SpawnSingleTarget;
 		ScheduleNextSpawn();
-
+		
+		//healing
+		_healingTimer = new Timer();
+		_healingTimer.WaitTime = 0.1f;
+		_healingTimer.OneShot = true;
+		AddChild(_healingTimer);
+		_healingTimer.Timeout += () => _isHealing = true;
+		
+		//collisions
 		ContactMonitor = true;
 		MaxContactsReported = 5;
 		_collisionCooldownTimer = new Timer();
 		AddChild(_collisionCooldownTimer);
-		_collisionCooldownTimer.WaitTime = 0.2f; // 0.2 seconds cooldown
+		_collisionCooldownTimer.WaitTime = 0.2f;
 		_collisionCooldownTimer.OneShot = true;
 		_collisionCooldownTimer.Timeout += () => _collisionCooldown = false;
 	}
-	
+	public override void _Process(double delta)
+	{
+		if (_timeSinceLastDamage < TimeToStartHealing)
+		{
+			_timeSinceLastDamage += (float)delta;
+		}
+		else
+		{
+			_isHealing = true;
+		}
+
+		if (_isHealing && _healingTimer.IsStopped())
+		{
+			HealPlayer();
+		}
+
+		HandleMovement();
+		HandleShooting((float)delta);
+	}
 	public override void _PhysicsProcess(double delta)
 	{
 		AngularVelocity = 0;
 		Rotation = 0;
 		RotationDegrees = 0;
-		HandleMovement((float)delta);
-		HandleShooting((float)delta);
 		
 		foreach (var body in GetCollidingBodies())
 		{
@@ -68,11 +99,12 @@ public partial class Player : RigidBody2D
 		
 	}
 
-	private void HandleMovement(float delta)
+	private void HandleMovement()
 	{
 		Vector2 inputVelocity = GetInput();
 		LinearVelocity = inputVelocity;
 	}
+	
 	private void HandlePlayerTargetCollision(RigidBody2D target)
 	{
 		if (_collisionCooldown)
@@ -96,7 +128,7 @@ public partial class Player : RigidBody2D
 	
 	private void HandleShooting(double delta)
 	{
-		if (Input.IsActionJustPressed("toggle_auto_shoot")) //E keyboard
+		if (Input.IsActionJustPressed("toggle_auto_shoot")) //prees E keyboard
 		{
 			_autoShootEnabled = !_autoShootEnabled;
 		}
@@ -144,6 +176,8 @@ public partial class Player : RigidBody2D
 		if (bullet is Bullet bulletScript)
 		{
 			bulletScript.Direction = direction;
+			bulletScript.Speed = BulletSpeed;
+			bulletScript.Damage = BulletDamage;
 		}
 
 		GetParent().AddChild(bullet);
@@ -176,16 +210,44 @@ public partial class Player : RigidBody2D
 		);
 
 		Vector2 targetPosition = GlobalPosition + randomOffset;
-
-		var target = TargetScene.Instantiate<Node2D>();
+		
+		var target = TargetScene.Instantiate<Target>();
 		target.GlobalPosition = targetPosition;
+
+		float initialImpulseX = rng.RandfRange(-50f, 50f);
+		float initialImpulseY = rng.RandfRange(-50f, 50f);
+		Vector2 initialImpulse = new Vector2(initialImpulseX, initialImpulseY);
+		GD.Print($"Generated Initial Impulse: {initialImpulse}");
+
+		target.SetInitialImpulse(initialImpulse, 10f);
 
 		GetParent().CallDeferred("add_child", target);
 		ScheduleNextSpawn();
 	}
+	private void HealPlayer()
+	{
+		_currentHP += HealingAmount;
+		_currentHP = Mathf.Min(_currentHP, Health);
+
+
+		if (_currentHP >= Health)
+		{
+			_isHealing = false;
+		}
+		else
+		{
+			GD.Print($"Healing... Current HP: {_currentHP}");
+			_isHealing = false;
+			_healingTimer.Start();
+		}
+	}
+	
 	public void TakeDamage(int damage)
 	{
 		_currentHP -= damage;
+		_timeSinceLastDamage = 0f;
+		_isHealing = false;
+		_healingTimer.Stop();
 
 		if (_currentHP <= 0)
 		{

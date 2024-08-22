@@ -6,6 +6,10 @@ public partial class Target : RigidBody2D
 
 	private int _currentHP;
 	private int _xpValue;
+	
+	private Vector2 _initialImpulse;
+	private float _initialImpulseDuration = 10f;
+	private float _elapsedTime;
 
 	[Export]
 	public float CollisionBorderScale = 1.2f;
@@ -24,6 +28,27 @@ public partial class Target : RigidBody2D
 		SetRandomColor();
 		CalculateHPBasedOnColor();
 		CalculateXPBasedOnVertices();
+		ApplyCentralImpulse(_initialImpulse);
+	}
+	public override void _PhysicsProcess(double delta)
+	{
+		_elapsedTime += (float)delta;
+	
+		if (_elapsedTime <= _initialImpulseDuration)
+		{
+			float remainingFactor = Mathf.Exp(-0.9f * _elapsedTime);
+			LinearVelocity = _initialImpulse * remainingFactor;
+		}
+	}
+	public void HandleCollision(Vector2 collisionImpulse)
+	{
+		ApplyCentralImpulse(collisionImpulse);
+	}
+	public void SetInitialImpulse(Vector2 impulse, float duration)
+	{
+		_initialImpulse = impulse;
+		_initialImpulseDuration = duration;
+		_elapsedTime = 0f;
 	}
 	
 	// i couldnt really think of anything better than doing circle and random value +- from the centre, works
