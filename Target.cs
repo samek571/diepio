@@ -7,12 +7,12 @@ public partial class Target : RigidBody2D
 	private int _currentHP;
 	private int _xpValue;
 	
-	private Vector2 _initialImpulse;
-	private float _initialImpulseDuration = 10f;
-	private float _elapsedTime;
+	// private Vector2 _initialImpulse;
+	// private float _initialImpulseDuration = 10f;
+	// private bool _initialImpulseActive = true;
+	// private float _elapsedTime;
 
-	[Export]
-	public float CollisionBorderScale = 1.2f;
+	[Export] public float CollisionBorderScale = 1.2f;
 
 	private Polygon2D _polygon;
 	private CollisionPolygon2D _collisionPolygon;
@@ -24,21 +24,26 @@ public partial class Target : RigidBody2D
 		_polygon = GetNode<Polygon2D>("Polygon2D");
 		_collisionPolygon = GetNode<CollisionPolygon2D>("CollisionPolygon2D");
 		
+		GravityScale = 0;
 		GenerateRandomPolygon();
 		SetRandomColor();
 		CalculateHPBasedOnColor();
 		CalculateXPBasedOnVertices();
-		ApplyCentralImpulse(_initialImpulse);
+		// ApplyCentralImpulse(_initialImpulse);
 	}
 	public override void _PhysicsProcess(double delta)
 	{
-		_elapsedTime += (float)delta;
+		// _elapsedTime += (float)delta;
 	
-		if (_elapsedTime <= _initialImpulseDuration)
-		{
-			float remainingFactor = Mathf.Exp(-0.9f * _elapsedTime);
-			LinearVelocity = _initialImpulse * remainingFactor;
-		}
+		// if (_elapsedTime <= _initialImpulseDuration)
+		// {
+		// 	float remainingFactor = Mathf.Exp(-0.9f * _elapsedTime);
+		// 	LinearVelocity = _initialImpulse * remainingFactor;
+		// }
+		// else
+		// {
+		// 	_initialImpulseActive = false;
+		// }
 	}
 	public void HandleCollision(Vector2 collisionImpulse)
 	{
@@ -46,9 +51,10 @@ public partial class Target : RigidBody2D
 	}
 	public void SetInitialImpulse(Vector2 impulse, float duration)
 	{
-		_initialImpulse = impulse;
-		_initialImpulseDuration = duration;
-		_elapsedTime = 0f;
+		//_initialImpulse = impulse;
+		// _initialImpulseDuration = duration;
+		// _elapsedTime = 0f;
+		//_initialImpulseActive = true;
 	}
 	
 	// i couldnt really think of anything better than doing circle and random value +- from the centre, works
