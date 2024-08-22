@@ -23,26 +23,49 @@ public partial class Player : RigidBody2D
 	private Timer _spawnTimer;
 	private bool _autoShootEnabled = false;
 	private int _currentXP = 0;
-	private int _currentHP = 100;
+	private int _currentHP = 1000;
+	private bool _collisionCooldown = false;
+	private Timer _collisionCooldownTimer;
 
 
 	public override void _Ready()
 	{
 		_bulletScene = ResourceLoader.Load<PackedScene>("res://Bullet.tscn");
-		_shootTimer = 0;
+		
+		GravityScale = 0;
 
+		_shootTimer = 0;
 		_spawnTimer = new Timer();
 		_spawnTimer.OneShot = true;
 		AddChild(_spawnTimer);
 		_spawnTimer.Timeout += SpawnSingleTarget;
-		
 		ScheduleNextSpawn();
+
+		ContactMonitor = true;
+		MaxContactsReported = 5;
+		_collisionCooldownTimer = new Timer();
+		AddChild(_collisionCooldownTimer);
+		_collisionCooldownTimer.WaitTime = 0.2f; // 0.2 seconds cooldown
+		_collisionCooldownTimer.OneShot = true;
+		_collisionCooldownTimer.Timeout += () => _collisionCooldown = false;
 	}
 	
-	public override void _Process(double delta)
+	public override void _PhysicsProcess(double delta)
 	{
+		AngularVelocity = 0;
+		Rotation = 0;
+		RotationDegrees = 0;
 		HandleMovement((float)delta);
 		HandleShooting((float)delta);
+		
+		foreach (var body in GetCollidingBodies())
+		{
+			if (body is Target target)
+			{
+				HandlePlayerTargetCollision(target);
+			}
+		}
+		
 	}
 
 	private void HandleMovement(float delta)
@@ -50,21 +73,24 @@ public partial class Player : RigidBody2D
 		Vector2 inputVelocity = GetInput();
 		LinearVelocity = inputVelocity;
 	}
-	private void HandlePlayerTargetCollision(KinematicCollision2D collision, Target target)
+	private void HandlePlayerTargetCollision(RigidBody2D target)
 	{
-		int damage = 1;
+		if (_collisionCooldown)
+			return;
+		
+		int damage = 5;
 		TakeDamage(damage);
+		target.Call("TakeDamage", damage);
 
-		Vector2 collisionDirection = collision.GetNormal();
-		float bounceStrength = 300f;
+		Vector2 collisionDirection = GlobalPosition.DirectionTo(target.GlobalPosition);
+		float playerBounceStrength = 300f;
+		float targetBounceStrength = 5000f;
 
-		//Velocity = Velocity.Bounce(collisionDirection) * 0.5f;
-		ApplyCentralImpulse(collisionDirection * bounceStrength);
-		if (target is RigidBody2D rigidTarget)
-		{
-			rigidTarget.ApplyCentralImpulse(-collisionDirection * bounceStrength);
-			GD.Print($"Applied Impulse to Target: Direction: {-collisionDirection}, Strength: {bounceStrength}");
-		}
+		ApplyCentralImpulse(collisionDirection * playerBounceStrength);
+		target.ApplyCentralImpulse(collisionDirection * targetBounceStrength);
+		Rotation = 0;
+		_collisionCooldown = true;
+		_collisionCooldownTimer.Start();
 		GD.Print($"Player took damage, has {_currentHP} HP, and was bounced away from the target!");
 	}
 	
