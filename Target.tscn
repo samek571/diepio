@@ -11,15 +11,16 @@ mesh = SubResource("PlaceholderMesh_k8a17")
 base_texture = SubResource("MeshTexture_cpade")
 image_size = Vector2(30, 30)
 
-[node name="StaticBody2D" type="StaticBody2D"]
+[node name="RigidBody2D" type="RigidBody2D"]
+gravity_scale = 0.0
 script = ExtResource("1_x5lea")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = SubResource("MeshTexture_udgju")
 
+[node name="Polygon2D" type="Polygon2D" parent="."]
+
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
 position = Vector2(1, 1)
 scale = Vector2(0.879498, 0.60868)
 polygon = PackedVector2Array(90, 78, 76, 27, 37, -47, -22, -51, -68, -21, -62, 40, -28, 57, 8, 42, 37, 65, 23, 110)
-
-[node name="Polygon2D" type="Polygon2D" parent="."]

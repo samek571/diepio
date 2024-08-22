@@ -1,14 +1,14 @@
 namespace diep;
 using Godot;
 
-public partial class Target : StaticBody2D
+public partial class Target : RigidBody2D
 {
 
 	private int _currentHP;
 	private int _xpValue;
 
 	[Export]
-	public float CollisionBorderScale = 1.0f;
+	public float CollisionBorderScale = 1.2f;
 
 	private Polygon2D _polygon;
 	private CollisionPolygon2D _collisionPolygon;
@@ -58,7 +58,7 @@ public partial class Target : StaticBody2D
 	{
 		Color color = _polygon.Color;
 
-		// We should normalize the RGB values to 0-1 range but they alreadycome in that format
+		// we should normalize the RGB values to 0-1 range but they alreadycome in that format
 		// exponential decay 
 		float k = 5.0f; 
 		float contributionR = Mathf.Exp(-k * color.R);
@@ -100,7 +100,11 @@ public partial class Target : StaticBody2D
 
 		//GD.Print($"Target with {vertexCount} vertices => XP Value: {_xpValue}");
 	}
-
+	private void CalculateMassBasedOnSize()
+	{
+		float area = CalculatePolygonArea(_polygon.Polygon);
+		Mass = area * 0.1f;
+	}
 	
 	public void TakeDamage(int damage)
 	{
@@ -115,15 +119,37 @@ public partial class Target : StaticBody2D
 	
 	private void GiveXPToPlayer()
 	{
-		var player = GetTree().Root.GetNode<CharacterBody2D>("CharacterBody2D") as Player;
+		var player = GetTree().Root.GetNode<Player>("RigidBody2D");
 		if (player != null)
 		{
 			player.AddXP(_xpValue);
 		}
 	}
+	//little trick from linear algebra and pokrocile cvika at school
+	private float CalculatePolygonArea(Vector2[] vertices)
+	{
+		float area = 0;
+		int n = vertices.Length;
+
+		for (int i = 0; i < n; i++)
+		{
+			Vector2 current = vertices[i];
+			Vector2 next = vertices[(i + 1) % n];
+
+			area += current.X * next.Y - next.X * current.Y;
+		}
+
+		area = Mathf.Abs(area) / 2.0f;
+		return area;
+	}
 
 	private void Die()
 	{
 		QueueFree();
+	}
+	
+	public override void _IntegrateForces(PhysicsDirectBodyState2D state)
+	{
+		state.LinearVelocity = Vector2.Zero;
 	}
 }

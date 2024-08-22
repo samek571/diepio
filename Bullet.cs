@@ -25,6 +25,9 @@ public partial class Bullet : Area2D
 	{
 		if (body is Target target)
 		{
+			Vector2 impulse = Direction * Strength;
+			target.ApplyCentralImpulse(impulse);
+
 			target.TakeDamage(Strength);
 			QueueFree();
 		}

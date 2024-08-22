@@ -1,7 +1,7 @@
 namespace diep;
 using Godot;
 
-public partial class Player : CharacterBody2D
+public partial class Player : RigidBody2D
 {
 	/// <summary>
 	/// abilities that can be upgraded over time as the tank destroys some target enemies
@@ -21,8 +21,10 @@ public partial class Player : CharacterBody2D
 	private float _shootTimer;
 	private PackedScene _bulletScene;
 	private Timer _spawnTimer;
+	private bool _autoShootEnabled = false;
 	private int _currentXP = 0;
-	
+	private int _currentHP = 100;
+
 
 	public override void _Ready()
 	{
@@ -33,23 +35,60 @@ public partial class Player : CharacterBody2D
 		_spawnTimer.OneShot = true;
 		AddChild(_spawnTimer);
 		_spawnTimer.Timeout += SpawnSingleTarget;
+		
 		ScheduleNextSpawn();
 	}
-
+	
 	public override void _Process(double delta)
 	{
-		Vector2 velocity = GetInput();
-		Velocity = velocity;
-		MoveAndSlide();
+		HandleMovement((float)delta);
+		HandleShooting((float)delta);
+	}
+
+	private void HandleMovement(float delta)
+	{
+		Vector2 inputVelocity = GetInput();
+		LinearVelocity = inputVelocity;
+	}
+	private void HandlePlayerTargetCollision(KinematicCollision2D collision, Target target)
+	{
+		int damage = 1;
+		TakeDamage(damage);
+
+		Vector2 collisionDirection = collision.GetNormal();
+		float bounceStrength = 300f;
+
+		//Velocity = Velocity.Bounce(collisionDirection) * 0.5f;
+		ApplyCentralImpulse(collisionDirection * bounceStrength);
+		if (target is RigidBody2D rigidTarget)
+		{
+			rigidTarget.ApplyCentralImpulse(-collisionDirection * bounceStrength);
+			GD.Print($"Applied Impulse to Target: Direction: {-collisionDirection}, Strength: {bounceStrength}");
+		}
+		GD.Print($"Player took damage, has {_currentHP} HP, and was bounced away from the target!");
+	}
+	
+	private void HandleShooting(double delta)
+	{
+		if (Input.IsActionJustPressed("toggle_auto_shoot")) //E keyboard
+		{
+			_autoShootEnabled = !_autoShootEnabled;
+		}
 
 		_shootTimer += (float)delta;
-		if (Input.IsActionPressed("shoot") && _shootTimer >= 1.0 / ShootRate)
+
+		if (_autoShootEnabled && _shootTimer >= 1.0 / ShootRate)
+		{
+			Shoot();
+			_shootTimer = 0;
+		}
+
+		else if (!_autoShootEnabled && Input.IsActionPressed("shoot") && _shootTimer >= 1.0 / ShootRate)
 		{
 			Shoot();
 			_shootTimer = 0;
 		}
 	}
-
 	private Vector2 GetInput()
 	{
 		Vector2 inputVector = Vector2.Zero;
@@ -118,5 +157,19 @@ public partial class Player : CharacterBody2D
 		GetParent().CallDeferred("add_child", target);
 		ScheduleNextSpawn();
 	}
+	public void TakeDamage(int damage)
+	{
+		_currentHP -= damage;
 
+		if (_currentHP <= 0)
+		{
+			Die();
+		}
+	}
+
+	private void Die()
+	{
+		GD.Print("Player has died!");
+		QueueFree(); //trigger a game-over screen
+	}
 }
