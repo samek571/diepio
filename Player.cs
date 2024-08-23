@@ -1,29 +1,41 @@
 namespace diep;
 using Godot;
+using System;
+using System.Collections.Generic;
 
 public partial class Player : RigidBody2D
 {
 	//diep stats
 	[Export] public float HealingAmount = 0.1f;
 	[Export] public float Health = 100f;
-	[Export] public int BodyDamage = 5;
+	[Export] public float BodyDamage = 5f;
 	[Export] public float BulletSpeed = 400f;
-	[Export] public int BulletDamage = 20;
-	[Export] public int ShootRate = 10;
-	[Export] public int Speed = 200;
+	[Export] public float BulletDamage = 20f;
+	[Export] public float ShootRate = 10f;
+	[Export] public float Speed = 200f;
 
 	
 	[Export] public PackedScene TargetScene = (PackedScene)ResourceLoader.Load("res://Target.tscn");
 	[Export] public int TargetSpawnRange = 300;
-
+	
+	//shooting
 	private bool _autoShootEnabled;
 	private float _shootTimer;
 	private PackedScene _bulletScene;
 	private Timer _spawnTimer;
+	
+	//xp
 	private int _currentXP;
+	private int _level;
+	private int _upgradePoints;
+	private int Maxlevel = 45;
+	private List<int> _xpToLevels;
+	[Export] public int BaseXP = 200;
+	[Export] public float ExponentialFactor = 1.51f;
+	[Export] public int AdditionalXP = 50;
 	
 	//collisions
-	private bool _collisionCooldown = false;
+	private bool _collisionCooldown;
 	private Timer _collisionCooldownTimer;
 	
 	//healing
@@ -63,6 +75,9 @@ public partial class Player : RigidBody2D
 		_collisionCooldownTimer.OneShot = true;
 		AddChild(_collisionCooldownTimer);
 		_collisionCooldownTimer.Timeout += () => _collisionCooldown = false;
+		
+		//xp
+		_xpToLevels = CalculateXPRequirements(Maxlevel, BaseXP, ExponentialFactor, AdditionalXP);
 	}
 	public override void _Process(double delta)
 	{
@@ -82,6 +97,7 @@ public partial class Player : RigidBody2D
 
 		HandleMovement();
 		HandleShooting((float)delta);
+		HandleUpgradeInputs();
 	}
 	public override void _PhysicsProcess(double delta)
 	{
@@ -183,11 +199,6 @@ public partial class Player : RigidBody2D
 
 		GetParent().AddChild(bullet);
 	}
-	public void AddXP(int xp)
-	{
-		_currentXP += xp;
-		GD.Print($"XP Added: {xp}. Total XP: {_currentXP}");
-	}
 	
 	private void ScheduleNextSpawn()
 	{
@@ -218,7 +229,7 @@ public partial class Player : RigidBody2D
 		float initialImpulseX = rng.RandfRange(-50f, 50f);
 		float initialImpulseY = rng.RandfRange(-50f, 50f);
 		Vector2 initialImpulse = new Vector2(initialImpulseX, initialImpulseY);
-		GD.Print($"Generated Initial Impulse: {initialImpulse}");
+		//GD.Print($"Generated Initial Impulse: {initialImpulse}");
 
 		target.SetInitialImpulse(initialImpulse, 10f);
 
@@ -237,13 +248,13 @@ public partial class Player : RigidBody2D
 		}
 		else
 		{
-			GD.Print($"Healing... Current HP: {_currentHP}");
+			//GD.Print($"Healing... Current HP: {_currentHP}");
 			_isHealing = false;
 			_healingTimer.Start();
 		}
 	}
 	
-	public void TakeDamage(int damage)
+	public void TakeDamage(float damage)
 	{
 		_currentHP -= damage;
 		_timeSinceLastDamage = 0f;
@@ -259,6 +270,147 @@ public partial class Player : RigidBody2D
 	private void Die()
 	{
 		GD.Print("Player has died!");
-		QueueFree(); //trigger a game-over screen
+		QueueFree(); //----------------------------------------------------trigger a game-over screen
+	}
+	
+	public void AddXP(int xp)
+	{
+		_currentXP += xp;
+		CheckForLevelUp();
+	}
+	
+	private void CheckForLevelUp()
+	{
+		while (_level < _xpToLevels.Count && _currentXP >= _xpToLevels[_level])
+		{
+			_level++;
+			GD.Print($"Level Up! New Level: {_level}");
+			GrantUpgradePoints();
+		}
+	}
+	
+	private List<int> CalculateXPRequirements(int maxLevels, int q, float k, int p)
+	{
+		List<int> xpRequirements = new List<int>();
+
+		for (int x = 0; x < maxLevels; x++)
+		{
+			int xpRequired = (int)Math.Ceiling(q * Math.Pow(x, k) + p);
+			xpRequirements.Add(xpRequired);
+		}
+
+		return xpRequirements;
+	}
+	private void GrantUpgradePoints()
+	{
+		if (_level <= 15)
+		{
+			_upgradePoints++;
+		}
+		else if (_level <= 30)
+		{
+			if (_level % 2 != 0)
+			{
+				_upgradePoints++;
+			}
+		}
+		else if (_level <= Maxlevel)
+		{
+			if (_level % 3 == 0)
+			{
+				_upgradePoints++;
+			}
+		}
+
+		GD.Print($"Upgrade Points Earned: {_upgradePoints}");
+	}
+	private void HandleUpgradeInputs()
+	{
+		if (Input.IsActionJustPressed("upgrade_1"))
+		{
+			SpendUpgradePoint("HealingAmount");
+		}
+		else if (Input.IsActionJustPressed("upgrade_2"))
+		{
+			SpendUpgradePoint("Health");
+		}
+		else if (Input.IsActionJustPressed("upgrade_3"))
+		{
+			SpendUpgradePoint("BodyDamage");
+		}
+		else if (Input.IsActionJustPressed("upgrade_4"))
+		{
+			SpendUpgradePoint("BulletSpeed");
+		}
+		else if (Input.IsActionJustPressed("upgrade_5"))
+		{
+			SpendUpgradePoint("BulletDamage");
+		}
+		else if (Input.IsActionJustPressed("upgrade_6"))
+		{
+			SpendUpgradePoint("ShootRate");
+		}
+		else if (Input.IsActionJustPressed("upgrade_7"))
+		{
+			SpendUpgradePoint("Speed");
+		}
+	}
+	
+	public void SpendUpgradePoint(string stat)
+	{
+		if (_upgradePoints > 0)
+		{
+			_upgradePoints--;
+			
+			switch (stat)
+			{
+				case "HealingAmount":
+					HealingAmount += 0.05f;
+					break;
+				case "Health":
+					Health += 20f;
+					break;
+				case "BodyDamage":
+					BodyDamage += 5f;
+					break;
+				case "BulletSpeed":
+					BulletSpeed += 50f;
+					break;
+				case "BulletDamage":
+					BulletDamage += 10f;
+					break;
+				case "ShootRate":
+					ShootRate += 2f;
+					break;
+				case "Speed":
+					Speed += 20f;
+					break;
+				default:
+					GD.Print("Invalid stat selected for upgrade.");
+					_upgradePoints++;
+					break;
+			}
+
+			GD.Print($"{stat} upgraded! Current {stat}: {GetStatValue(stat)}");
+		}
+		else
+		{
+			GD.Print("No Upgrade Points available!");
+		}
+	}
+	
+	private float GetStatValue(string stat)
+	{
+		return stat switch
+		{
+			"HealingAmount" => HealingAmount,
+			"Health" => Health,
+			"BodyDamage" => BodyDamage,
+			"BulletSpeed" => BulletSpeed,
+			"BulletDamage" => BulletDamage,
+			"ShootRate" => ShootRate,
+			"Speed" => Speed,
+			_ => 0f,
+		};
 	}
 }

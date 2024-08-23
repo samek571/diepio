@@ -5,7 +5,7 @@ public partial class Bullet : Area2D
 {
 	public Vector2 Direction { get; set; }
 	public float Speed { get; set; }
-	public int Damage { get; set; }
+	public float Damage { get; set; }
 	
 	public override void _Ready()
 	{
