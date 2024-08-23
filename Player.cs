@@ -45,12 +45,16 @@ public partial class Player : RigidBody2D
 	private float _timeSinceLastDamage;
 	private bool _isHealing;
 	private Timer _healingTimer;
-
+	
+	//help files
+	private LevelManager _levelManager;
 
 	public override void _Ready()
 	{
 		GravityScale = 0;
 		
+		//scenes and files
+		_levelManager = new LevelManager();
 		_bulletScene = ResourceLoader.Load<PackedScene>("res://Bullet.tscn");
 		
 		//shooting
@@ -77,8 +81,6 @@ public partial class Player : RigidBody2D
 		AddChild(_collisionCooldownTimer);
 		_collisionCooldownTimer.Timeout += () => _collisionCooldown = false;
 		
-		//xp
-		_xpToLevels = CalculateXPRequirements(Maxlevel, BaseXP, ExponentialFactor, AdditionalXP);
 	}
 	public override void _Process(double delta)
 	{
@@ -277,55 +279,9 @@ public partial class Player : RigidBody2D
 	
 	public void AddXP(int xp)
 	{
-		_currentXP += xp;
-		CheckForLevelUp();
+		_levelManager.AddXP(xp);
 	}
-	
-	private void CheckForLevelUp()
-	{
-		while (_level < _xpToLevels.Count && _currentXP >= _xpToLevels[_level])
-		{
-			_level++;
-			GD.Print($"Level Up! New Level: {_level}");
-			GrantUpgradePoints();
-		}
-	}
-	
-	private List<int> CalculateXPRequirements(int maxLevels, int q, float k, int p)
-	{
-		List<int> xpRequirements = new List<int>();
 
-		for (int x = 0; x < maxLevels; x++)
-		{
-			int xpRequired = (int)Math.Ceiling(q * Math.Pow(x, k) + p);
-			xpRequirements.Add(xpRequired);
-		}
-
-		return xpRequirements;
-	}
-	private void GrantUpgradePoints()
-	{
-		if (_level <= 15)
-		{
-			_upgradePoints++;
-		}
-		else if (_level <= 30)
-		{
-			if (_level % 2 != 0)
-			{
-				_upgradePoints++;
-			}
-		}
-		else if (_level <= Maxlevel)
-		{
-			if (_level % 3 == 0)
-			{
-				_upgradePoints++;
-			}
-		}
-
-		GD.Print($"Upgrade Points Earned: {_upgradePoints}");
-	}
 	private void HandleUpgradeInputs()
 	{
 		if (Input.IsActionJustPressed("upgrade_1"))
@@ -364,10 +320,9 @@ public partial class Player : RigidBody2D
 	
 	public void SpendUpgradePoint(string stat)
 	{
-		if (_upgradePoints > 0)
+		if (_levelManager.GetUpgradePoints() > 0)
 		{
-			_upgradePoints--;
-			
+			_levelManager.SpendUpgradePoint();
 			switch (stat)
 			{
 				case "HealingSpeed":
@@ -396,7 +351,7 @@ public partial class Player : RigidBody2D
 					break;
 				default:
 					GD.Print("Invalid stat selected for upgrade.");
-					_upgradePoints++;
+					_levelManager.GetUpgradePoints();
 					break;
 			}
 
