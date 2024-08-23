@@ -15,9 +15,8 @@ public partial class Player : RigidBody2D
 	[Export] public float ReloadSpeed = 10f;
 	[Export] public float MovementSpeed = 200f;
 
-	
 	[Export] public PackedScene TargetScene = (PackedScene)ResourceLoader.Load("res://Target.tscn");
-	[Export] public int TargetSpawnRange = 300;
+	[Export] public int TargetSpawnRange = 400;
 	
 	//shooting
 	private bool _autoShootEnabled;
@@ -39,23 +38,25 @@ public partial class Player : RigidBody2D
 	private bool _collisionCooldown;
 	private Timer _collisionCooldownTimer;
 	
-	//healing
-	private float _currentHP = 100;
-	float TimeToStartHealing = 3.0f;
-	private float _timeSinceLastDamage;
-	private bool _isHealing;
-	private Timer _healingTimer;
-	
 	//help files
 	private LevelManager _levelManager;
+	private UpgradeManager _upgradeManager;
+	private HealthManager _healthManager;
 
 	public override void _Ready()
 	{
 		GravityScale = 0;
 		
 		//scenes and files
-		_levelManager = new LevelManager();
 		_bulletScene = ResourceLoader.Load<PackedScene>("res://Bullet.tscn");
+		_levelManager = new LevelManager();
+		_upgradeManager = new UpgradeManager(_levelManager);
+
+		_healthManager = new HealthManager(Health, HealingSpeed, 3.0f);
+		_healthManager.Connect(nameof(HealthManager.PlayerDied), new Callable(this, nameof(OnPlayerDied)));
+
+		AddChild(_healthManager);
+		
 		
 		//shooting
 		_shootTimer = 0;
@@ -64,13 +65,6 @@ public partial class Player : RigidBody2D
 		AddChild(_spawnTimer);
 		_spawnTimer.Timeout += SpawnSingleTarget;
 		ScheduleNextSpawn();
-		
-		//healing
-		_healingTimer = new Timer();
-		_healingTimer.WaitTime = 0.1f;
-		_healingTimer.OneShot = true;
-		AddChild(_healingTimer);
-		_healingTimer.Timeout += () => _isHealing = true;
 		
 		//collisions
 		ContactMonitor = true;
@@ -84,23 +78,11 @@ public partial class Player : RigidBody2D
 	}
 	public override void _Process(double delta)
 	{
-		if (_timeSinceLastDamage < TimeToStartHealing)
-		{
-			_timeSinceLastDamage += (float)delta;
-		}
-		else
-		{
-			_isHealing = true;
-		}
-
-		if (_isHealing && _healingTimer.IsStopped())
-		{
-			HealPlayer();
-		}
-
 		HandleMovement();
 		HandleShooting((float)delta);
-		HandleUpgradeInputs();
+		_healthManager.UpdateTimeSinceLastDamage((float)delta);
+		_healthManager.Heal((float)delta);
+		_upgradeManager.HandleUpgradeInputs();
 	}
 	public override void _PhysicsProcess(double delta)
 	{
@@ -129,7 +111,7 @@ public partial class Player : RigidBody2D
 		if (_collisionCooldown)
 			return;
 		
-		TakeDamage(BodyDamage);
+		_healthManager.TakeDamage(BodyDamage);
 		target.Call("TakeDamage", BodyDamage);
 
 		Vector2 collisionDirection = GlobalPosition.DirectionTo(target.GlobalPosition).Normalized();
@@ -143,7 +125,6 @@ public partial class Player : RigidBody2D
 
 		_collisionCooldown = true;
 		_collisionCooldownTimer.Start();
-		GD.Print($"Player took damage, has {_currentHP} HP, and was bounced away from the target!");
 	}
 	
 	private void HandleShooting(double delta)
@@ -200,7 +181,6 @@ public partial class Player : RigidBody2D
 			bulletScript.BulletDamage = BulletDamage;
 			bulletScript.BulletDurability = BulletDurability;
 		}
-
 		GetParent().AddChild(bullet);
 	}
 	
@@ -240,41 +220,21 @@ public partial class Player : RigidBody2D
 		GetParent().CallDeferred("add_child", target);
 		ScheduleNextSpawn();
 	}
+	
 	private void HealPlayer()
 	{
-		_currentHP += HealingSpeed;
-		_currentHP = Mathf.Min(_currentHP, Health);
-
-
-		if (_currentHP >= Health)
-		{
-			_isHealing = false;
-		}
-		else
-		{
-			//GD.Print($"Healing... Current HP: {_currentHP}");
-			_isHealing = false;
-			_healingTimer.Start();
-		}
+		_healthManager.Heal(HealingSpeed);
 	}
 	
 	public void TakeDamage(float damage)
 	{
-		_currentHP -= damage;
-		_timeSinceLastDamage = 0f;
-		_isHealing = false;
-		_healingTimer.Stop();
-
-		if (_currentHP <= 0)
-		{
-			Die();
-		}
+		_healthManager.TakeDamage(damage);
 	}
-
-	private void Die()
+	private void OnPlayerDied()
 	{
 		GD.Print("Player has died!");
-		QueueFree(); //----------------------------------------------------trigger a game-over screen
+		QueueFree(); // Handle game-over logic, like freeing the player node or showing a game-over screen
+		// Optionally trigger a scene change or restart
 	}
 	
 	public void AddXP(int xp)
@@ -284,97 +244,16 @@ public partial class Player : RigidBody2D
 
 	private void HandleUpgradeInputs()
 	{
-		if (Input.IsActionJustPressed("upgrade_1"))
-		{
-			SpendUpgradePoint("HealingSpeed");
-		}
-		else if (Input.IsActionJustPressed("upgrade_2"))
-		{
-			SpendUpgradePoint("Health");
-		}
-		else if (Input.IsActionJustPressed("upgrade_3"))
-		{
-			SpendUpgradePoint("BodyDamage");
-		}
-		else if (Input.IsActionJustPressed("upgrade_4"))
-		{
-			SpendUpgradePoint("BulletSpeed");
-		}
-		else if (Input.IsActionJustPressed("upgrade_5"))
-		{
-			SpendUpgradePoint("BulletDurability");
-		}
-		else if (Input.IsActionJustPressed("upgrade_6"))
-		{
-			SpendUpgradePoint("BulletDamage");
-		}
-		else if (Input.IsActionJustPressed("upgrade_7"))
-		{
-			SpendUpgradePoint("ReloadSpeed");
-		}
-		else if (Input.IsActionJustPressed("upgrade_8"))
-		{
-			SpendUpgradePoint("MovementSpeed");
-		}
+		_upgradeManager.HandleUpgradeInputs();
 	}
 	
 	public void SpendUpgradePoint(string stat)
 	{
-		if (_levelManager.GetUpgradePoints() > 0)
-		{
-			_levelManager.SpendUpgradePoint();
-			switch (stat)
-			{
-				case "HealingSpeed":
-					HealingSpeed += 0.05f;
-					break;
-				case "Health":
-					Health += 20f;
-					break;
-				case "BodyDamage":
-					BodyDamage += 5f;
-					break;
-				case "BulletSpeed":
-					BulletSpeed += 50f;
-					break;
-				case "BulletDurability":
-					BulletDurability += 0.35f;
-					break;
-				case "BulletDamage":
-					BulletDamage += 10f;
-					break;
-				case "ReloadSpeed":
-					ReloadSpeed += 2f;
-					break;
-				case "MovementSpeed":
-					MovementSpeed += 20f;
-					break;
-				default:
-					GD.Print("Invalid stat selected for upgrade.");
-					_levelManager.GetUpgradePoints();
-					break;
-			}
-
-			GD.Print($"{stat} upgraded! Current {stat}: {GetStatValue(stat)}");
-		}
-		else
-		{
-			GD.Print("No Upgrade Points available!");
-		}
+		_upgradeManager.SpendUpgradePoint(stat);
 	}
 	
 	private float GetStatValue(string stat)
 	{
-		return stat switch
-		{
-			"HealingSpeed" => HealingSpeed,
-			"Health" => Health,
-			"BodyDamage" => BodyDamage,
-			"BulletSpeed" => BulletSpeed,
-			"BulletDamage" => BulletDamage,
-			"ReloadSpeed" => ReloadSpeed,
-			"MovementSpeed" => MovementSpeed,
-			_ => 0f,
-		};
+		return _upgradeManager.GetStatValue(stat);
 	}
 }
