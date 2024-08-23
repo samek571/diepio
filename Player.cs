@@ -6,13 +6,14 @@ using System.Collections.Generic;
 public partial class Player : RigidBody2D
 {
 	//diep stats
-	[Export] public float HealingAmount = 0.1f;
+	[Export] public float HealingSpeed = 0.1f;
 	[Export] public float Health = 100f;
 	[Export] public float BodyDamage = 5f;
 	[Export] public float BulletSpeed = 400f;
+	[Export] public float BulletDurability = 1.0f;
 	[Export] public float BulletDamage = 20f;
-	[Export] public float ShootRate = 10f;
-	[Export] public float Speed = 200f;
+	[Export] public float ReloadSpeed = 10f;
+	[Export] public float MovementSpeed = 200f;
 
 	
 	[Export] public PackedScene TargetScene = (PackedScene)ResourceLoader.Load("res://Target.tscn");
@@ -152,13 +153,13 @@ public partial class Player : RigidBody2D
 
 		_shootTimer += (float)delta;
 
-		if (_autoShootEnabled && _shootTimer >= 1.0 / ShootRate)
+		if (_autoShootEnabled && _shootTimer >= 1.0 / ReloadSpeed)
 		{
 			Shoot();
 			_shootTimer = 0;
 		}
 
-		else if (!_autoShootEnabled && Input.IsActionPressed("shoot") && _shootTimer >= 1.0 / ShootRate)
+		else if (!_autoShootEnabled && Input.IsActionPressed("shoot") && _shootTimer >= 1.0 / ReloadSpeed)
 		{
 			Shoot();
 			_shootTimer = 0;
@@ -178,7 +179,7 @@ public partial class Player : RigidBody2D
 		if (Input.IsActionPressed("move_up"))
 			inputVector.Y -= 1;
 
-		return inputVector.Normalized() * Speed;
+		return inputVector.Normalized() * MovementSpeed;
 	}
 
 	private void Shoot()
@@ -193,8 +194,9 @@ public partial class Player : RigidBody2D
 		if (bullet is Bullet bulletScript)
 		{
 			bulletScript.Direction = direction;
-			bulletScript.Speed = BulletSpeed;
-			bulletScript.Damage = BulletDamage;
+			bulletScript.BulletSpeed = BulletSpeed;
+			bulletScript.BulletDamage = BulletDamage;
+			bulletScript.BulletDurability = BulletDurability;
 		}
 
 		GetParent().AddChild(bullet);
@@ -238,7 +240,7 @@ public partial class Player : RigidBody2D
 	}
 	private void HealPlayer()
 	{
-		_currentHP += HealingAmount;
+		_currentHP += HealingSpeed;
 		_currentHP = Mathf.Min(_currentHP, Health);
 
 
@@ -328,7 +330,7 @@ public partial class Player : RigidBody2D
 	{
 		if (Input.IsActionJustPressed("upgrade_1"))
 		{
-			SpendUpgradePoint("HealingAmount");
+			SpendUpgradePoint("HealingSpeed");
 		}
 		else if (Input.IsActionJustPressed("upgrade_2"))
 		{
@@ -344,15 +346,19 @@ public partial class Player : RigidBody2D
 		}
 		else if (Input.IsActionJustPressed("upgrade_5"))
 		{
-			SpendUpgradePoint("BulletDamage");
+			SpendUpgradePoint("BulletDurability");
 		}
 		else if (Input.IsActionJustPressed("upgrade_6"))
 		{
-			SpendUpgradePoint("ShootRate");
+			SpendUpgradePoint("BulletDamage");
 		}
 		else if (Input.IsActionJustPressed("upgrade_7"))
 		{
-			SpendUpgradePoint("Speed");
+			SpendUpgradePoint("ReloadSpeed");
+		}
+		else if (Input.IsActionJustPressed("upgrade_8"))
+		{
+			SpendUpgradePoint("MovementSpeed");
 		}
 	}
 	
@@ -364,8 +370,8 @@ public partial class Player : RigidBody2D
 			
 			switch (stat)
 			{
-				case "HealingAmount":
-					HealingAmount += 0.05f;
+				case "HealingSpeed":
+					HealingSpeed += 0.05f;
 					break;
 				case "Health":
 					Health += 20f;
@@ -376,14 +382,17 @@ public partial class Player : RigidBody2D
 				case "BulletSpeed":
 					BulletSpeed += 50f;
 					break;
+				case "BulletDurability":
+					BulletDurability += 0.35f;
+					break;
 				case "BulletDamage":
 					BulletDamage += 10f;
 					break;
-				case "ShootRate":
-					ShootRate += 2f;
+				case "ReloadSpeed":
+					ReloadSpeed += 2f;
 					break;
-				case "Speed":
-					Speed += 20f;
+				case "MovementSpeed":
+					MovementSpeed += 20f;
 					break;
 				default:
 					GD.Print("Invalid stat selected for upgrade.");
@@ -403,13 +412,13 @@ public partial class Player : RigidBody2D
 	{
 		return stat switch
 		{
-			"HealingAmount" => HealingAmount,
+			"HealingSpeed" => HealingSpeed,
 			"Health" => Health,
 			"BodyDamage" => BodyDamage,
 			"BulletSpeed" => BulletSpeed,
 			"BulletDamage" => BulletDamage,
-			"ShootRate" => ShootRate,
-			"Speed" => Speed,
+			"ReloadSpeed" => ReloadSpeed,
+			"MovementSpeed" => MovementSpeed,
 			_ => 0f,
 		};
 	}
