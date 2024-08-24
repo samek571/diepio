@@ -4,22 +4,24 @@ using System.Collections.Generic;
 
 public class UpgradeManager
 {
-    private readonly Dictionary<string, float> _stats;
+    private const int MaxUpgradeLevel = 7;
+    private readonly Dictionary<string, (float value, int level)> _stats;
+    
     private readonly LevelManager _levelManager;
 
     public UpgradeManager(LevelManager levelManager)
     {
         _levelManager = levelManager;
-        _stats = new Dictionary<string, float>
+        _stats = new Dictionary<string, (float value, int level)>
         {
-            {"HealingSpeed", 0.1f},
-            {"Health", 100f},
-            {"BodyDamage", 5f},
-            {"BulletSpeed", 400f},
-            {"BulletDurability", 1.0f},
-            {"BulletDamage", 20f},
-            {"ReloadSpeed", 10f},
-            {"MovementSpeed", 200f}
+            {"HealingSpeed", (0.1f, 0)},
+            {"Health", (100f, 0)},
+            {"BodyDamage", (5f, 0)},
+            {"BulletSpeed", (400f, 0)},
+            {"BulletDurability", (1.0f, 0)},
+            {"BulletDamage", (20f, 0)},
+            {"ReloadSpeed", (10f, 0)},
+            {"MovementSpeed", (200f, 0)}
         };
     }
 
@@ -63,39 +65,47 @@ public class UpgradeManager
     {
         if (_levelManager.GetUpgradePoints() > 0)
         {
+            var statData = _stats[stat];
+            if (statData.level >= MaxUpgradeLevel)
+            {
+                GD.Print($"{stat} is already at the maximum level of {MaxUpgradeLevel}.");
+                return;
+            }
+            
             _levelManager.SpendUpgradePoint();
             switch (stat)
             {
                 case "HealingSpeed":
-                    _stats["HealingSpeed"] += 0.05f;
+                    statData.value += 0.05f;
                     break;
                 case "Health":
-                    _stats["Health"] += 20f;
+                    statData.value += 20f;
                     break;
                 case "BodyDamage":
-                    _stats["BodyDamage"] += 5f;
+                    statData.value += 5f;
                     break;
                 case "BulletSpeed":
-                    _stats["BulletSpeed"] += 50f;
+                    statData.value += 50f;
                     break;
                 case "BulletDurability":
-                    _stats["BulletDurability"] += 0.35f;
+                    statData.value += 0.35f;
                     break;
                 case "BulletDamage":
-                    _stats["BulletDamage"] += 10f;
+                    statData.value += 10f;
                     break;
                 case "ReloadSpeed":
-                    _stats["ReloadSpeed"] += 2f;
+                    statData.value += 2f;
                     break;
                 case "MovementSpeed":
-                    _stats["MovementSpeed"] += 20f;
+                    statData.value += 20f;
                     break;
                 default:
                     GD.Print("Invalid stat selected for upgrade.");
                     break;
             }
-
-            GD.Print($"{stat} upgraded! Current {stat}: {GetStatValue(stat)}");
+            statData.level++;
+            _stats[stat] = statData;
+            GD.Print($"{stat} upgraded! Current {stat}: {statData.value}, Level: {statData.level}");
         }
         else
         {
@@ -105,15 +115,15 @@ public class UpgradeManager
 
     public float GetStatValue(string stat)
     {
-        return _stats.ContainsKey(stat) ? _stats[stat] : 0f;
+        return _stats.ContainsKey(stat) ? _stats[stat].value : 0f;
     }
-
-    public float GetHealth() => _stats["Health"];
-    public float GetHealingSpeed() => _stats["HealingSpeed"];
-    public float GetBodyDamage() => _stats["BodyDamage"];
-    public float GetBulletSpeed() => _stats["BulletSpeed"];
-    public float GetBulletDurability() => _stats["BulletDurability"];
-    public float GetBulletDamage() => _stats["BulletDamage"];
-    public float GetReloadSpeed() => _stats["ReloadSpeed"];
-    public float GetMovementSpeed() => _stats["MovementSpeed"];
+    
+    public float GetHealth() => _stats["Health"].value;
+    public float GetHealingSpeed() => _stats["HealingSpeed"].value;
+    public float GetBodyDamage() => _stats["BodyDamage"].value;
+    public float GetBulletSpeed() => _stats["BulletSpeed"].value;
+    public float GetBulletDurability() => _stats["BulletDurability"].value;
+    public float GetBulletDamage() => _stats["BulletDamage"].value;
+    public float GetReloadSpeed() => _stats["ReloadSpeed"].value;
+    public float GetMovementSpeed() => _stats["MovementSpeed"].value;
 }

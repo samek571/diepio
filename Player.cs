@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public partial class Player : RigidBody2D
 {
 	//diep stats
-	[Export] public float HealingSpeed = 0.1f;
+	[Export] public float HealingSpeed = 0.2f;
 	[Export] public float Health = 100f;
 	[Export] public float BodyDamage = 5f;
 	[Export] public float BulletSpeed = 400f;
@@ -230,6 +230,7 @@ public partial class Player : RigidBody2D
 	{
 		_healthManager.TakeDamage(damage);
 	}
+	
 	private void OnPlayerDied()
 	{
 		GD.Print("Player has died!");
@@ -245,15 +246,5 @@ public partial class Player : RigidBody2D
 	private void HandleUpgradeInputs()
 	{
 		_upgradeManager.HandleUpgradeInputs();
-	}
-	
-	public void SpendUpgradePoint(string stat)
-	{
-		_upgradeManager.SpendUpgradePoint(stat);
-	}
-	
-	private float GetStatValue(string stat)
-	{
-		return _upgradeManager.GetStatValue(stat);
 	}
 }

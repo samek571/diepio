@@ -69,5 +69,5 @@ public partial class HealthManager : Node
         _timeSinceLastDamage += delta;
     }
 
-    public float GetCurrentHP() => _currentHP;
+    //public float GetCurrentHP() => _currentHP;
 }
