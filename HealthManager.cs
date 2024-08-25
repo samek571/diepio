@@ -41,7 +41,7 @@ public partial class HealthManager : Node
         {
             EmitSignal(nameof(PlayerDied));
         }
-        //GD.Print($"Player took damage, has {_currentHP} HP, and was bounced away from the target!");
+        GD.Print($"Player took damage, has {_currentHP} HP, and was bounced away from the target!");
     }
 
     public void Heal(float delta)

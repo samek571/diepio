@@ -3,8 +3,9 @@ using Godot;
 
 public partial class Enemy : Target
 {
-	private float _health = 20f;
-	private float _speed = 150f;
+	private float _enemyHealth = 5f;
+	private float _enemySpeed = 50f;
+	public float _enemyDamage = 15f;
 	private Player _player;
 	public void Initialize(Player player)
 	{
@@ -17,7 +18,7 @@ public partial class Enemy : Target
 		{
 			Vector2 playerPosition = _player.GetPlayerPosition();
 			Vector2 directionToPlayer = (playerPosition - GlobalPosition).Normalized();
-			LinearVelocity = directionToPlayer * _speed;
+			LinearVelocity = directionToPlayer * _enemySpeed;
 		}
 		else
 		{
@@ -26,8 +27,8 @@ public partial class Enemy : Target
 	}
 	public void TakeDamage(float damage)
 	{
-		_health -= damage;
-		if (_health <= 0)
+		_enemyHealth -= damage;
+		if (_enemyHealth <= 0)
 		{
 			Die();
 		}

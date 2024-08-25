@@ -6,6 +6,7 @@ public partial class Target : RigidBody2D
 
 	private int _currentHP;
 	private int _xpValue;
+	public float _targetDamage = 3.1415f;
 	
 	private Vector2 _initialImpulse;
 	private float _initialImpulseDuration = 1f;
@@ -100,7 +101,6 @@ public partial class Target : RigidBody2D
 		Color color = _polygon.Color;
 
 		// we should normalize the RGB values to 0-1 range but they alreadycome in that format
-		// exponential decay 
 		float k = 5.0f; 
 		float contributionR = Mathf.Exp(-k * color.R);
 		float contributionG = Mathf.Exp(-k * color.G);
@@ -119,7 +119,6 @@ public partial class Target : RigidBody2D
 
 		int maxHP = baseHP + (int)(scaleFactor * logContribution) + bonusHP;
 		_currentHP = maxHP;
-		//GD.Print($"Target Color: R: {color.R}, G: {color.G}, B: {color.B} => MaxHP: {maxHP}");
 	}
 	
 	private void CalculateXPBasedOnVertices()

@@ -8,17 +8,18 @@ public partial class Player : RigidBody2D
 	//diep stats
 	[Export] public float HealingSpeed = 0.2f;
 	[Export] public float Health = 100f;
-	[Export] public float BodyDamage = 5f;
+	[Export] public float BodyDamage = 50f;
 	[Export] public float BulletSpeed = 400f;
-	[Export] public float BulletDurability = 1.0f;
+	[Export] public float BulletDurability = 1.2f;
 	[Export] public float BulletDamage = 20f;
 	[Export] public float ReloadSpeed = 10f;
 	[Export] public float MovementSpeed = 200f;
-
+	
+	//target
 	[Export] public PackedScene TargetScene = (PackedScene)ResourceLoader.Load("res://Target.tscn");
 	[Export] public int TargetSpawnRange = 400;
 	
-	//simple enemy	
+	//enemy	
 	[Export] public PackedScene EnemyScene = (PackedScene)ResourceLoader.Load("res://Enemy.tscn");
 	private Timer _enemySpawnTimer;
 	private RandomNumberGenerator _rng;
@@ -31,14 +32,9 @@ public partial class Player : RigidBody2D
 	private Timer _spawnTimer;
 	
 	//xp
-	private int _currentXP;
 	private int _level;
 	private int _upgradePoints;
-	private int Maxlevel = 45;
-	private List<int> _xpToLevels;
-	[Export] public int BaseXP = 200;
 	[Export] public float ExponentialFactor = 1.51f;
-	[Export] public int AdditionalXP = 50;
 	
 	//collisions
 	private bool _collisionCooldown;
@@ -63,12 +59,11 @@ public partial class Player : RigidBody2D
 		_healthManager.Connect(nameof(HealthManager.PlayerDied), new Callable(this, nameof(OnPlayerDied)));
 		AddChild(_healthManager);
 		
-		
 
 		//enemy
 		_enemyScene = ResourceLoader.Load<PackedScene>("res://Enemy.tscn");
 		var enemySpawnTimer = new Timer();
-		enemySpawnTimer.WaitTime = 3.0f;
+		enemySpawnTimer.WaitTime = 5.0f;
 		enemySpawnTimer.OneShot = false;
 		enemySpawnTimer.Timeout += SpawnEnemiesInBulk;
 		AddChild(enemySpawnTimer);
@@ -116,7 +111,6 @@ public partial class Player : RigidBody2D
 				HandlePlayerTargetCollision(target);
 			}
 		}
-		
 	}
 
 	private void HandleMovement()
@@ -130,8 +124,16 @@ public partial class Player : RigidBody2D
 		if (_collisionCooldown)
 			return;
 		
-		_healthManager.TakeDamage(BodyDamage);
-		target.Call("TakeDamage", BodyDamage);
+		if (target is Enemy enemy)
+		{
+			TakeDamage(enemy._enemyDamage);
+			enemy.TakeDamage(BodyDamage);
+		}
+		else if (target is Target targetObject)
+		{
+			_healthManager.TakeDamage(targetObject._targetDamage);
+			target.Call("TakeDamage", BodyDamage);
+		}
 
 		Vector2 collisionDirection = GlobalPosition.DirectionTo(target.GlobalPosition).Normalized();
 		float playerBounceStrength = 300f;
@@ -242,8 +244,9 @@ public partial class Player : RigidBody2D
 	{
 		RandomNumberGenerator rng = new RandomNumberGenerator();
 		rng.Randomize();
-
-		for (int i = 0; i < 3; i++) // Spawning 3 enemies at a time
+		
+		int enemyCount = rng.RandiRange(2, 5);
+		for (int i = 0; i < enemyCount; i++)
 		{
 			Vector2 randomOffset = new Vector2(
 				rng.RandfRange(-TargetSpawnRange, TargetSpawnRange),
@@ -268,7 +271,7 @@ public partial class Player : RigidBody2D
 			RandomNumberGenerator rng = new RandomNumberGenerator();
 			rng.Randomize();
 
-			float randomInterval = rng.RandfRange(2.0f, 3.0f);
+			float randomInterval = rng.RandfRange(1.0f, 2.0f);
 			_enemySpawnTimer.WaitTime = randomInterval;
 			_enemySpawnTimer.Start();
 		}
