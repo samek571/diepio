@@ -16,11 +16,18 @@ public partial class Target : RigidBody2D
 
 	private Polygon2D _polygon;
 	private CollisionPolygon2D _collisionPolygon;
-	private RandomNumberGenerator _rng = new RandomNumberGenerator();
+	private RandomNumberGenerator _rng = new();
 
 
 	public override void _Ready()
 	{
+		if (this is Enemy)
+		{
+			GravityScale = 0;
+			return;
+		}
+		
+		
 		_polygon = GetNode<Polygon2D>("Polygon2D");
 		_collisionPolygon = GetNode<CollisionPolygon2D>("CollisionPolygon2D");
 		

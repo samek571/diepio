@@ -41,7 +41,7 @@ public partial class HealthManager : Node
         {
             EmitSignal(nameof(PlayerDied));
         }
-        GD.Print($"Player took damage, has {_currentHP} HP, and was bounced away from the target!");
+        //GD.Print($"Player took damage, has {_currentHP} HP, and was bounced away from the target!");
     }
 
     public void Heal(float delta)
@@ -56,10 +56,12 @@ public partial class HealthManager : Node
         {
             _currentHP += _healingSpeed * delta;
             _currentHP = Mathf.Min(_currentHP, _maxHP);
+            //GD.Print($"HEALING, I have {_currentHP}");
 
             if (_currentHP >= _maxHP)
             {
                 _isHealing = false;
+                //GD.Print("Player healing finished!");
             }
         }
     }

@@ -18,6 +18,12 @@ public partial class Player : RigidBody2D
 	[Export] public PackedScene TargetScene = (PackedScene)ResourceLoader.Load("res://Target.tscn");
 	[Export] public int TargetSpawnRange = 400;
 	
+	//simple enemy	
+	[Export] public PackedScene EnemyScene = (PackedScene)ResourceLoader.Load("res://Enemy.tscn");
+	private Timer _enemySpawnTimer;
+	private RandomNumberGenerator _rng;
+	[Export] public int EnemySpawnRange = 400;
+	
 	//shooting
 	private bool _autoShootEnabled;
 	private float _shootTimer;
@@ -42,6 +48,7 @@ public partial class Player : RigidBody2D
 	private LevelManager _levelManager;
 	private UpgradeManager _upgradeManager;
 	private HealthManager _healthManager;
+	private PackedScene _enemyScene;
 
 	public override void _Ready()
 	{
@@ -54,8 +61,20 @@ public partial class Player : RigidBody2D
 
 		_healthManager = new HealthManager(Health, HealingSpeed, 3.0f);
 		_healthManager.Connect(nameof(HealthManager.PlayerDied), new Callable(this, nameof(OnPlayerDied)));
-
 		AddChild(_healthManager);
+		
+		
+
+		//enemy
+		_enemyScene = ResourceLoader.Load<PackedScene>("res://Enemy.tscn");
+		var enemySpawnTimer = new Timer();
+		enemySpawnTimer.WaitTime = 3.0f;
+		enemySpawnTimer.OneShot = false;
+		enemySpawnTimer.Timeout += SpawnEnemiesInBulk;
+		AddChild(enemySpawnTimer);
+		enemySpawnTimer.Start();
+		_rng = new RandomNumberGenerator();
+		_rng.Randomize();
 		
 		
 		//shooting
@@ -183,7 +202,6 @@ public partial class Player : RigidBody2D
 		}
 		GetParent().AddChild(bullet);
 	}
-	
 	private void ScheduleNextSpawn()
 	{
 		RandomNumberGenerator rng = new RandomNumberGenerator();
@@ -220,7 +238,42 @@ public partial class Player : RigidBody2D
 		GetParent().CallDeferred("add_child", target);
 		ScheduleNextSpawn();
 	}
-	
+	private void SpawnEnemiesInBulk()
+	{
+		RandomNumberGenerator rng = new RandomNumberGenerator();
+		rng.Randomize();
+
+		for (int i = 0; i < 3; i++) // Spawning 3 enemies at a time
+		{
+			Vector2 randomOffset = new Vector2(
+				rng.RandfRange(-TargetSpawnRange, TargetSpawnRange),
+				rng.RandfRange(-TargetSpawnRange, TargetSpawnRange)
+			);
+
+			Vector2 spawnPosition = GlobalPosition + randomOffset;
+
+			var enemy = _enemyScene.Instantiate<Enemy>();
+			enemy.GlobalPosition = spawnPosition;
+
+			enemy.Initialize(this);
+			GetParent().CallDeferred("add_child", enemy);
+		}
+		ScheduleNextEnemySpawn();
+	}
+
+	private void ScheduleNextEnemySpawn()
+	{
+		if (_enemySpawnTimer != null)
+		{
+			RandomNumberGenerator rng = new RandomNumberGenerator();
+			rng.Randomize();
+
+			float randomInterval = rng.RandfRange(2.0f, 3.0f);
+			_enemySpawnTimer.WaitTime = randomInterval;
+			_enemySpawnTimer.Start();
+		}
+	}
+
 	private void HealPlayer()
 	{
 		_healthManager.Heal(HealingSpeed);
@@ -234,8 +287,7 @@ public partial class Player : RigidBody2D
 	private void OnPlayerDied()
 	{
 		GD.Print("Player has died!");
-		QueueFree(); // Handle game-over logic, like freeing the player node or showing a game-over screen
-		// Optionally trigger a scene change or restart
+		QueueFree();
 	}
 	
 	public void AddXP(int xp)
@@ -246,5 +298,10 @@ public partial class Player : RigidBody2D
 	private void HandleUpgradeInputs()
 	{
 		_upgradeManager.HandleUpgradeInputs();
+	}
+	
+	public Vector2 GetPlayerPosition()
+	{
+		return GlobalPosition;
 	}
 }

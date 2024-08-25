@@ -45,6 +45,10 @@ public partial class Bullet : Area2D
 		{
 			player.TakeDamage(BulletDamage);
 		}
+		else if (body is Enemy enemy)
+		{
+			enemy.TakeDamage(BulletDamage);
+		}
 		else if (body is Target target)
 		{
 			target.Call("TakeDamage", BulletDamage);

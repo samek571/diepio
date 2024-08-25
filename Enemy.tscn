@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://dee1wyewjdjao"]
+
+[ext_resource type="Script" path="res://Enemy.cs" id="1_s23kv"]
+[ext_resource type="Texture2D" uid="uid://dq7uqm5s8f3sv" path="res://enem.png" id="2_bf2g8"]
+
+[node name="RigidBody2D" type="RigidBody2D"]
+script = ExtResource("1_s23kv")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.02, 0.02)
+texture = ExtResource("2_bf2g8")
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(18, -31, -28, 6, 27, 30)
