@@ -14,7 +14,7 @@ public class UpgradeManager
         _levelManager = levelManager;
         _stats = new Dictionary<string, (float value, int level)>
         {
-            {"HealingSpeed", (0.1f, 0)},
+            {"HealingSpeed", (0.15f, 0)},
             {"Health", (100f, 0)},
             {"BodyDamage", (5f, 0)},
             {"BulletSpeed", (400f, 0)},

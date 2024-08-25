@@ -1,5 +1,3 @@
-using System.Collections;
-
 namespace diep;
 using Godot;
 
