@@ -7,9 +7,11 @@ public class LevelManager
 {
 	private int _currentXP;
 	private int _level;
-	private int _upgradePoints;
+	public int _upgradePoints;
 	private const int MaxLevel = 45;
 	private List<int> _xpToLevels;
+	
+	public int _spentPoints;
 
 	[Export] public int BaseXP = 200;
 	[Export] public float ExponentialFactor = 1.51f;
@@ -83,6 +85,7 @@ public class LevelManager
 		if (_upgradePoints > 0)
 		{
 			_upgradePoints--;
+			_spentPoints += 1;
 		}
 		else
 		{

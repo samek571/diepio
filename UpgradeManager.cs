@@ -1,6 +1,7 @@
 namespace diep;
 using Godot;
 using System.Collections.Generic;
+using System.Linq;
 
 public class UpgradeManager
 {
@@ -74,6 +75,10 @@ public class UpgradeManager
         {
             SpendUpgradePoint("MovementSpeed");
         }
+        else if (Input.IsActionJustPressed("upgrade_reset"))
+        {
+            ResetAllUpgrades();
+        }
     }
 
     public void SpendUpgradePoint(string stat)
@@ -128,6 +133,24 @@ public class UpgradeManager
             GD.Print("No Upgrade Points available!");
         }
     }
+    private void ResetAllUpgrades()
+    {
+        _stats["HealingSpeed"] = (0.15f, 0);
+        _stats["Health"] = (100f, 0);
+        _stats["BodyDamage"] = (5f, 0);
+        _stats["BulletSpeed"] = (400f, 0);
+        _stats["BulletDurability"] = (1.0f, 0);
+        _stats["BulletDamage"] = (20f, 0);
+        _stats["ReloadSpeed"] = (10f, 0);
+        _stats["MovementSpeed"] = (200f, 0);
+
+        _levelManager._upgradePoints += _levelManager._spentPoints;
+        _levelManager._spentPoints = 0;
+
+        GD.Print("All upgrades have been reset, and points have been refunded!");
+        //add sound
+    }
+    
     private void PlayUpgradeSound(string stat)
     {
         if (_upgradeSounds.ContainsKey(stat))
