@@ -18,6 +18,8 @@ script = ExtResource("1_x5lea")
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = SubResource("MeshTexture_udgju")
 
+[node name="BorderPolygon" type="Polygon2D" parent="."]
+
 [node name="Polygon2D" type="Polygon2D" parent="."]
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
