@@ -9,9 +9,12 @@ public class UpgradeManager
     
     private readonly LevelManager _levelManager;
 
-    public UpgradeManager(LevelManager levelManager)
+    private readonly Dictionary<string, AudioStream> _upgradeSounds;
+    private AudioStreamPlayer _audioPlayer;
+    public UpgradeManager(LevelManager levelManager, AudioStreamPlayer audioPlayer)
     {
         _levelManager = levelManager;
+        _audioPlayer = audioPlayer;
         _stats = new Dictionary<string, (float value, int level)>
         {
             {"HealingSpeed", (0.15f, 0)},
@@ -22,6 +25,18 @@ public class UpgradeManager
             {"BulletDamage", (20f, 0)},
             {"ReloadSpeed", (10f, 0)},
             {"MovementSpeed", (200f, 0)}
+        };
+        
+        _upgradeSounds = new Dictionary<string, AudioStream>
+        {
+            {"HealingSpeed", (AudioStream)ResourceLoader.Load("res://sounds/1.wav")},
+            {"Health", (AudioStream)ResourceLoader.Load("res://sounds/2.wav")},
+            {"BodyDamage", (AudioStream)ResourceLoader.Load("res://sounds/3.wav")},
+            {"BulletSpeed", (AudioStream)ResourceLoader.Load("res://sounds/4.wav")},
+            {"BulletDurability", (AudioStream)ResourceLoader.Load("res://sounds/5.wav")},
+            {"BulletDamage", (AudioStream)ResourceLoader.Load("res://sounds/6.wav")},
+            {"ReloadSpeed", (AudioStream)ResourceLoader.Load("res://sounds/7.wav")},
+            {"MovementSpeed", (AudioStream)ResourceLoader.Load("res://sounds/8.wav")}
         };
     }
 
@@ -106,13 +121,21 @@ public class UpgradeManager
             statData.level++;
             _stats[stat] = statData;
             GD.Print($"{stat} upgraded! Current {stat}: {statData.value}, Level: {statData.level}");
+            PlayUpgradeSound(stat);
         }
         else
         {
             GD.Print("No Upgrade Points available!");
         }
     }
-
+    private void PlayUpgradeSound(string stat)
+    {
+        if (_upgradeSounds.ContainsKey(stat))
+        {
+            _audioPlayer.Stream = _upgradeSounds[stat];
+            _audioPlayer.Play();
+        }
+    }
     public float GetStatValue(string stat)
     {
         return _stats.ContainsKey(stat) ? _stats[stat].value : 0f;
