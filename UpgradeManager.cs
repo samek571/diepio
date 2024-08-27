@@ -149,7 +149,6 @@ public class UpgradeManager
 
         GD.Print("All upgrades have been reset, and points have been refunded!");
         PlayUpgradeSound("upgrade_reset");
-        //add sound
     }
     
     private void PlayUpgradeSound(string stat)

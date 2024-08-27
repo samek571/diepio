@@ -21,7 +21,7 @@ public partial class Player : RigidBody2D
 	[Export] public PackedScene EnemyScene = (PackedScene)ResourceLoader.Load("res://Enemy.tscn");
 	private Timer _enemySpawnTimer;
 	private RandomNumberGenerator _rng;
-	[Export] public int EnemySpawnRange = 400;
+	[Export] public int EnemySpawnRange = 600;
 	
 	//shooting
 	private bool _autoShootEnabled;
@@ -63,14 +63,13 @@ public partial class Player : RigidBody2D
 		//enemy
 		_enemyScene = ResourceLoader.Load<PackedScene>("res://Enemy.tscn");
 		var enemySpawnTimer = new Timer();
-		enemySpawnTimer.WaitTime = 5.0f;
+		enemySpawnTimer.WaitTime = 12.0f;
 		enemySpawnTimer.OneShot = false;
 		enemySpawnTimer.Timeout += SpawnEnemiesInBulk;
 		AddChild(enemySpawnTimer);
 		enemySpawnTimer.Start();
 		_rng = new RandomNumberGenerator();
 		_rng.Randomize();
-		
 		
 		//shooting
 		_shootTimer = 0;
@@ -88,7 +87,6 @@ public partial class Player : RigidBody2D
 		_collisionCooldownTimer.OneShot = true;
 		AddChild(_collisionCooldownTimer);
 		_collisionCooldownTimer.Timeout += () => _collisionCooldown = false;
-		
 	}
 	public override void _Process(double delta)
 	{
@@ -195,7 +193,7 @@ public partial class Player : RigidBody2D
 		bullet.GlobalPosition = GlobalPosition;
 		bullet.Rotation = direction.Angle();
 
-		if (bullet is Bullet bulletScript)
+		if (bullet is { } bulletScript)
 		{
 			bulletScript.Direction = direction;
 			bulletScript.BulletSpeed = BulletSpeed;
@@ -209,7 +207,7 @@ public partial class Player : RigidBody2D
 		RandomNumberGenerator rng = new RandomNumberGenerator();
 		rng.Randomize();
 
-		float randomInterval = rng.RandfRange(1.0f, 2.0f); //tweak this --------------------------------
+		float randomInterval = rng.RandfRange(3.0f, 4.0f);
 
 		_spawnTimer.WaitTime = randomInterval;
 		_spawnTimer.Start();
@@ -219,10 +217,15 @@ public partial class Player : RigidBody2D
 	{
 		RandomNumberGenerator rng = new RandomNumberGenerator();
 		rng.Randomize();
+		
+		float minDistance = 75f;
+		float maxDistance = TargetSpawnRange;
+		float angle = rng.RandfRange(0, Mathf.Tau);
+		float distance = rng.RandfRange(minDistance, maxDistance);
 
 		Vector2 randomOffset = new Vector2(
-			rng.RandfRange(-TargetSpawnRange, TargetSpawnRange),
-			rng.RandfRange(-TargetSpawnRange, TargetSpawnRange)
+			Mathf.Cos(angle) * distance,
+			Mathf.Sin(angle) * distance
 		);
 
 		Vector2 targetPosition = GlobalPosition + randomOffset;
@@ -233,24 +236,30 @@ public partial class Player : RigidBody2D
 		float initialImpulseX = rng.RandfRange(-50f, 50f);
 		float initialImpulseY = rng.RandfRange(-50f, 50f);
 		Vector2 initialImpulse = new Vector2(initialImpulseX, initialImpulseY);
-		//GD.Print($"Generated Initial Impulse: {initialImpulse}");
 
 		target.SetInitialImpulse(initialImpulse, 10f);
 
 		GetParent().CallDeferred("add_child", target);
 		ScheduleNextSpawn();
 	}
+	
 	private void SpawnEnemiesInBulk()
 	{
 		RandomNumberGenerator rng = new RandomNumberGenerator();
 		rng.Randomize();
 		
-		int enemyCount = rng.RandiRange(2, 5);
+		int enemyCount = rng.RandiRange(2, 4);
+		float minDistance = 50f;  
+		float maxDistance = TargetSpawnRange;
 		for (int i = 0; i < enemyCount; i++)
 		{
+			
+			float angle = rng.RandfRange(0, Mathf.Tau);
+			float distance = rng.RandfRange(minDistance, maxDistance);
+
 			Vector2 randomOffset = new Vector2(
-				rng.RandfRange(-TargetSpawnRange, TargetSpawnRange),
-				rng.RandfRange(-TargetSpawnRange, TargetSpawnRange)
+				Mathf.Cos(angle) * distance,
+				Mathf.Sin(angle) * distance
 			);
 
 			Vector2 spawnPosition = GlobalPosition + randomOffset;
