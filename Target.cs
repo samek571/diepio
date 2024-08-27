@@ -148,7 +148,6 @@ public partial class Target : RigidBody2D
 		{
 			_xpValue += 10;
 		}
-
 		//GD.Print($"Target with {vertexCount} vertices => XP Value: {_xpValue}");
 	}
 	private void CalculateMassBasedOnSize()
@@ -189,7 +188,6 @@ public partial class Target : RigidBody2D
 
 			area += current.X * next.Y - next.X * current.Y;
 		}
-
 		area = Mathf.Abs(area) / 2.0f;
 		return area;
 	}
