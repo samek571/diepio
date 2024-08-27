@@ -1,7 +1,5 @@
 namespace diep;
 using Godot;
-using System;
-using System.Collections.Generic;
 
 public partial class Player : RigidBody2D
 {
@@ -52,13 +50,15 @@ public partial class Player : RigidBody2D
 		
 		//scenes and files
 		_bulletScene = ResourceLoader.Load<PackedScene>("res://Bullet.tscn");
-		_levelManager = new LevelManager();
-		_upgradeManager = new UpgradeManager(_levelManager);
-
 		_healthManager = new HealthManager(Health, HealingSpeed, 3.0f);
 		_healthManager.Connect(nameof(HealthManager.PlayerDied), new Callable(this, nameof(OnPlayerDied)));
 		AddChild(_healthManager);
 		
+		//audio
+		var upgradeSoundPlayer = new AudioStreamPlayer();
+		AddChild(upgradeSoundPlayer);
+		_levelManager = new LevelManager();
+		_upgradeManager = new UpgradeManager(_levelManager, upgradeSoundPlayer);
 
 		//enemy
 		_enemyScene = ResourceLoader.Load<PackedScene>("res://Enemy.tscn");
