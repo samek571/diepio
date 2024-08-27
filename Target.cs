@@ -1,5 +1,7 @@
 namespace diep;
 using Godot;
+using System.Linq;
+
 
 public partial class Target : RigidBody2D
 {
@@ -16,6 +18,7 @@ public partial class Target : RigidBody2D
 	[Export] public float CollisionBorderScale = 1.2f;
 
 	private Polygon2D _polygon;
+	private Polygon2D _borderPolygon;
 	private CollisionPolygon2D _collisionPolygon;
 	private RandomNumberGenerator _rng = new();
 
@@ -28,7 +31,7 @@ public partial class Target : RigidBody2D
 			return;
 		}
 		
-		
+		_borderPolygon = GetNode<Polygon2D>("BorderPolygon");
 		_polygon = GetNode<Polygon2D>("Polygon2D");
 		_collisionPolygon = GetNode<CollisionPolygon2D>("CollisionPolygon2D");
 		
@@ -37,6 +40,14 @@ public partial class Target : RigidBody2D
 		SetRandomColor();
 		CalculateHPBasedOnColor();
 		CalculateXPBasedOnVertices();
+		
+		var borderPoints = _polygon.Polygon.Select(p => p * 1.05f).ToArray();
+		_borderPolygon.Polygon = borderPoints;
+		_borderPolygon.Color = new Color(0, 0, 0);
+
+		var innerPoints = _polygon.Polygon.Select(p => p * 0.9f).ToArray();
+		_polygon.Polygon = innerPoints;
+
 		
 		ApplyCentralImpulse(_initialImpulse);
 	}
