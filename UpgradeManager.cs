@@ -1,7 +1,6 @@
 namespace diep;
 using Godot;
 using System.Collections.Generic;
-using System.Linq;
 
 public class UpgradeManager
 {
@@ -37,7 +36,8 @@ public class UpgradeManager
             {"BulletDurability", (AudioStream)ResourceLoader.Load("res://sounds/5.wav")},
             {"BulletDamage", (AudioStream)ResourceLoader.Load("res://sounds/6.wav")},
             {"ReloadSpeed", (AudioStream)ResourceLoader.Load("res://sounds/7.wav")},
-            {"MovementSpeed", (AudioStream)ResourceLoader.Load("res://sounds/8.wav")}
+            {"MovementSpeed", (AudioStream)ResourceLoader.Load("res://sounds/8.wav")},
+            {"upgrade_reset", (AudioStream)ResourceLoader.Load("res://sounds/upgrade_reset.wav")}
         };
     }
 
@@ -148,20 +148,17 @@ public class UpgradeManager
         _levelManager._spentPoints = 0;
 
         GD.Print("All upgrades have been reset, and points have been refunded!");
+        PlayUpgradeSound("upgrade_reset");
         //add sound
     }
     
     private void PlayUpgradeSound(string stat)
     {
-        if (_upgradeSounds.ContainsKey(stat))
+        if (_upgradeSounds.ContainsKey(stat) || ((stat == "upgrade_reset") && (_levelManager._spentPoints > 0)))
         {
             _audioPlayer.Stream = _upgradeSounds[stat];
             _audioPlayer.Play();
         }
-    }
-    public float GetStatValue(string stat)
-    {
-        return _stats.ContainsKey(stat) ? _stats[stat].value : 0f;
     }
     
     public float GetHealth() => _stats["Health"].value;

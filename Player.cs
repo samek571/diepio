@@ -1,7 +1,5 @@
 namespace diep;
 using Godot;
-using System;
-using System.Collections.Generic;
 
 public partial class Player : RigidBody2D
 {
