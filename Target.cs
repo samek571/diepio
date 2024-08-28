@@ -10,7 +10,7 @@ public partial class Target : RigidBody2D
 	public float _targetDamage = 3.1415f;
 	
 	private Vector2 _initialImpulse;
-	private float _initialImpulseDuration = 1.5f;
+	private float _initialImpulseDuration = 1.616f;
 	private bool _initialImpulseActive = true;
 	private float _elapsedTime;
 

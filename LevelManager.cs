@@ -13,7 +13,7 @@ public class LevelManager
 	public int _spentPoints;
 
 	[Export] public int BaseXP = 200;
-	[Export] public float ExponentialFactor = 1.51f;
+	[Export] public float ExponentialFactor = 1.21f;
 	[Export] public int AdditionalXP = 50;
 
 	public LevelManager()

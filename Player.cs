@@ -9,13 +9,14 @@ public partial class Player : RigidBody2D
 	[Export] public float BodyDamage = 50f;
 	[Export] public float BulletSpeed = 400f;
 	[Export] public float BulletDurability = 1.2f;
-	[Export] public float BulletDamage = 20f;
-	[Export] public float ReloadSpeed = 10f;
+	[Export] public float BulletDamage = 40f;
+	[Export] public float ReloadSpeed = 5f;
 	[Export] public float MovementSpeed = 200f;
 	
 	//target
 	[Export] public PackedScene TargetScene = (PackedScene)ResourceLoader.Load("res://Target.tscn");
-	[Export] public int TargetSpawnRange = 400;
+	[Export] public int TargetSpawnRange = 350;
+	private float targetSpawnTime = 2.2f;
 	
 	//enemy	
 	[Export] public PackedScene EnemyScene = (PackedScene)ResourceLoader.Load("res://Enemy.tscn");
@@ -32,7 +33,6 @@ public partial class Player : RigidBody2D
 	//xp
 	private int _level;
 	private int _upgradePoints;
-	[Export] public float ExponentialFactor = 1.51f;
 	
 	//collisions
 	private bool _collisionCooldown;
@@ -47,8 +47,8 @@ public partial class Player : RigidBody2D
 	//health + xpbar
 	private ProgressBar _healthBar;
 	private ProgressBar _xpBar;
-	private const float XPBarWidth = 1150;
-	private const float XPBarHeight = 20;
+	private float XPBarWidth = DisplayServer.WindowGetSize().X;
+	private float XPBarHeight = DisplayServer.WindowGetSize().Y *0.03f; //scaling factor
 	
 	public override void _Ready()
 	{
@@ -56,7 +56,7 @@ public partial class Player : RigidBody2D
 		
 		//scenes and files
 		_bulletScene = ResourceLoader.Load<PackedScene>("res://Bullet.tscn");
-		_healthManager = new HealthManager(Health, HealingSpeed, 3.0f);
+		_healthManager = new HealthManager(Health, HealingSpeed, 3.5f);
 		_healthManager.Connect(nameof(HealthManager.PlayerDied), new Callable(this, nameof(OnPlayerDied)));
 		AddChild(_healthManager);
 		
@@ -99,6 +99,7 @@ public partial class Player : RigidBody2D
 		_healthBar = GetNode<ProgressBar>("ProgressBar");
 		_healthBar.MaxValue = Health;
 		_healthBar.Value = _healthManager._currentHP;
+		
 		//xpbar
 		InitializeXPBar();
 	}
@@ -227,9 +228,9 @@ public partial class Player : RigidBody2D
 		RandomNumberGenerator rng = new RandomNumberGenerator();
 		rng.Randomize();
 
-		float randomInterval = rng.RandfRange(3.0f, 4.0f);
+		float randomInterval = rng.RandfRange(-1.0f, 1.0f);
 
-		_spawnTimer.WaitTime = randomInterval;
+		_spawnTimer.WaitTime = targetSpawnTime + randomInterval;
 		_spawnTimer.Start();
 	}
 
@@ -375,9 +376,23 @@ public partial class Player : RigidBody2D
 	private void UpdateXPBarSize()
 	{
 		Vector2 screenSize = DisplayServer.WindowGetSize();
-
+	
 		float xpBarWidth = screenSize.X * 1f;
-		float xpBarHeight = 20;
+		float xpBarHeight = screenSize.Y * 0.03f;
 		_xpBar.Size = new Vector2(xpBarWidth, xpBarHeight);
+		
+		Vector2 xpBarPosition = new Vector2(screenSize.X - 1.5f*xpBarWidth, xpBarHeight+screenSize.Y/2 - 2.4f*xpBarHeight);
+		_xpBar.Position = xpBarPosition;
+		
+		//color - no function needed...		
+		var theme = new Theme();
+		var fgStyle = new StyleBoxFlat();
+		fgStyle.BgColor = new Color(1.0f, 0.8f, 0.0f);
+		var bgStyle = new StyleBoxFlat();
+		bgStyle.BgColor = new Color(0.2f, 0.2f, 0.2f);
+
+		theme.SetStylebox("fill", "ProgressBar", fgStyle);
+		theme.SetStylebox("background", "ProgressBar", bgStyle);
+		_xpBar.Theme = theme;
 	}
 }
