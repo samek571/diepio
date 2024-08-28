@@ -375,9 +375,12 @@ public partial class Player : RigidBody2D
 	private void UpdateXPBarSize()
 	{
 		Vector2 screenSize = DisplayServer.WindowGetSize();
-
+	
 		float xpBarWidth = screenSize.X * 1f;
-		float xpBarHeight = 20;
+		float xpBarHeight = screenSize.Y * 0.03f;
 		_xpBar.Size = new Vector2(xpBarWidth, xpBarHeight);
+		
+		Vector2 xpBarPosition = new Vector2(screenSize.X - 1.5f*xpBarWidth, xpBarHeight+screenSize.Y/2 - 2.4f*xpBarHeight);
+		_xpBar.Position = xpBarPosition;
 	}
 }
