@@ -110,6 +110,11 @@ public partial class Player : RigidBody2D
 		_healthManager.Heal((float)delta);
 		_upgradeManager.HandleUpgradeInputs();
 		_healthBar.Value = _healthManager._currentHP;
+		
+		//update xpbar size
+		base._Process(delta);
+		UpdateXPBarSize();
+		
 	}
 	public override void _PhysicsProcess(double delta)
 	{
@@ -323,7 +328,7 @@ public partial class Player : RigidBody2D
 		_xpBar.Size = new Vector2(XPBarWidth, XPBarHeight);
 		_xpBar.MaxValue = _levelManager.GetXPForNextLevel();
 		_xpBar.Value = _levelManager._currentXP;
-		_xpBar.Position = new Vector2(-XPBarWidth/2,300);  // Adjust position as needed
+		_xpBar.Position = new Vector2(-XPBarWidth/2,300);
 		AddChild(_xpBar);
 	}
 	public void UpdateXPBar()
@@ -364,5 +369,15 @@ public partial class Player : RigidBody2D
 		_healthBar.MaxValue = 100;
 		_healthBar.Value = Mathf.Min(_healthManager._currentHP, 100);
 		GD.Print("Health bar reset to original settings.");
+	}
+	
+	
+	private void UpdateXPBarSize()
+	{
+		Vector2 screenSize = DisplayServer.WindowGetSize();
+
+		float xpBarWidth = screenSize.X * 1f;
+		float xpBarHeight = 20;
+		_xpBar.Size = new Vector2(xpBarWidth, xpBarHeight);
 	}
 }
