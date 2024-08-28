@@ -90,8 +90,10 @@ public partial class Player : RigidBody2D
 		AddChild(_collisionCooldownTimer);
 		_collisionCooldownTimer.Timeout += () => _collisionCooldown = false;
 		
+		//healthbar
 		_healthManager._currentHP = Health;
 		_healthBar = GetNode<ProgressBar>("ProgressBar");
+		UpdateHealthBar();
 		_healthBar.MaxValue = Health;
 		_healthBar.Value = _healthManager._currentHP;
 		
@@ -327,5 +329,11 @@ public partial class Player : RigidBody2D
 	public Vector2 GetPlayerPosition()
 	{
 		return GlobalPosition;
+	}
+	
+	private void UpdateHealthBar()
+	{
+		_healthBar.MaxValue = Health;
+		_healthBar.Value = _healthManager._currentHP;
 	}
 }
