@@ -43,8 +43,12 @@ public partial class Player : RigidBody2D
 	private UpgradeManager _upgradeManager;
 	private HealthManager _healthManager;
 	private PackedScene _enemyScene;
-
+	
+	//health + xpbar
 	private ProgressBar _healthBar;
+	private ProgressBar _xpBar;
+	private const float XPBarWidth = 1150;
+	private const float XPBarHeight = 20;
 	
 	public override void _Ready()
 	{
@@ -95,7 +99,8 @@ public partial class Player : RigidBody2D
 		_healthBar = GetNode<ProgressBar>("ProgressBar");
 		_healthBar.MaxValue = Health;
 		_healthBar.Value = _healthManager._currentHP;
-		
+		//xpbar
+		InitializeXPBar();
 	}
 	public override void _Process(double delta)
 	{
@@ -312,10 +317,27 @@ public partial class Player : RigidBody2D
 		GD.Print("Player has died!");
 		QueueFree();
 	}
-	
+	private void InitializeXPBar()
+	{
+		_xpBar = new ProgressBar();
+		_xpBar.Size = new Vector2(XPBarWidth, XPBarHeight);
+		_xpBar.MaxValue = _levelManager.GetXPForNextLevel();
+		_xpBar.Value = _levelManager._currentXP;
+		_xpBar.Position = new Vector2(-XPBarWidth/2,300);  // Adjust position as needed
+		AddChild(_xpBar);
+	}
+	public void UpdateXPBar()
+	{
+		int currentXPWithinLevel = _levelManager.GetCurrentXPWithinLevel();
+		int xpRangeForCurrentLevel = _levelManager.GetXPRangeForCurrentLevel();
+
+		_xpBar.MaxValue = xpRangeForCurrentLevel;
+		_xpBar.Value = currentXPWithinLevel;
+	}
 	public void AddXP(int xp)
 	{
 		_levelManager.AddXP(xp);
+		UpdateXPBar();
 	}
 
 	private void HandleUpgradeInputs()

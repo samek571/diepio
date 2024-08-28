@@ -5,12 +5,11 @@ using System.Collections.Generic;
 
 public class LevelManager
 {
-	private int _currentXP;
-	private int _level;
+	public int _currentXP;
 	public int _upgradePoints;
+	private int _level;
 	private const int MaxLevel = 45;
-	private List<int> _xpToLevels;
-	
+	public List<int> _xpToLevels;
 	public int _spentPoints;
 
 	[Export] public int BaseXP = 200;
@@ -38,10 +37,11 @@ public class LevelManager
 			_level++;
 			GD.Print($"Level Up! New Level: {_level}");
 			GrantUpgradePoints();
+			
 		}
 	}
 
-	private List<int> CalculateXPRequirements(int maxLevels, int q, float k, int p)
+	public List<int> CalculateXPRequirements(int maxLevels, int q, float k, int p)
 	{
 		List<int> xpRequirements = new List<int>();
 
@@ -52,6 +52,13 @@ public class LevelManager
 		}
 
 		return xpRequirements;
+	}
+	public int GetXPForNextLevel()
+	{
+		if (_level < _xpToLevels.Count)
+			return _xpToLevels[_level];
+		else
+			return int.MaxValue;
 	}
 
 	private void GrantUpgradePoints()
@@ -92,4 +99,31 @@ public class LevelManager
 			GD.Print("No Upgrade Points available!");
 		}
 	}
+	
+	public int GetCurrentLevelXP()
+	{
+		int currentLevelIndex = Math.Max(0, _level - 1);
+		return _xpToLevels[currentLevelIndex];
+	}
+
+	public int GetNextLevelXP()
+	{
+		if (_level < _xpToLevels.Count)
+			return _xpToLevels[_level];
+		return int.MaxValue;
+	}
+
+	public int GetCurrentXPWithinLevel()
+	{
+		int currentLevelXP = GetCurrentLevelXP();
+		return _currentXP - currentLevelXP;
+	}
+
+	public int GetXPRangeForCurrentLevel()
+	{
+		int currentLevelXP = GetCurrentLevelXP();
+		int nextLevelXP = GetNextLevelXP();
+		return nextLevelXP - currentLevelXP;
+	}
+	
 }
