@@ -3,8 +3,8 @@ using Godot;
 
 public partial class HealthManager : Node
 {
-    private float _currentHP;
-    private float _maxHP;
+    public float _currentHP;
+    public float _maxHP;
     private float _healingSpeed;
     private bool _isHealing;
     private Timer _healingTimer;

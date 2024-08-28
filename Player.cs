@@ -44,6 +44,8 @@ public partial class Player : RigidBody2D
 	private HealthManager _healthManager;
 	private PackedScene _enemyScene;
 
+	private ProgressBar _healthBar;
+	
 	public override void _Ready()
 	{
 		GravityScale = 0;
@@ -87,6 +89,13 @@ public partial class Player : RigidBody2D
 		_collisionCooldownTimer.OneShot = true;
 		AddChild(_collisionCooldownTimer);
 		_collisionCooldownTimer.Timeout += () => _collisionCooldown = false;
+		
+		//healthbar
+		_healthManager._currentHP = Health;
+		_healthBar = GetNode<ProgressBar>("ProgressBar");
+		_healthBar.MaxValue = Health;
+		_healthBar.Value = _healthManager._currentHP;
+		
 	}
 	public override void _Process(double delta)
 	{
@@ -95,6 +104,7 @@ public partial class Player : RigidBody2D
 		_healthManager.UpdateTimeSinceLastDamage((float)delta);
 		_healthManager.Heal((float)delta);
 		_upgradeManager.HandleUpgradeInputs();
+		_healthBar.Value = _healthManager._currentHP;
 	}
 	public override void _PhysicsProcess(double delta)
 	{
@@ -293,7 +303,8 @@ public partial class Player : RigidBody2D
 	
 	public void TakeDamage(float damage)
 	{
-		_healthManager.TakeDamage(damage);
+		_healthManager._currentHP -= damage;
+		_healthBar.Value -= Mathf.Clamp(_healthManager._currentHP, 0, Health);
 	}
 	
 	private void OnPlayerDied()
@@ -315,5 +326,21 @@ public partial class Player : RigidBody2D
 	public Vector2 GetPlayerPosition()
 	{
 		return GlobalPosition;
+	}
+	
+	public void UpdateHealthBar(float newMaxHealth)
+	{
+		_healthManager._maxHP = newMaxHealth;
+		_healthBar.MaxValue = newMaxHealth;
+		_healthBar.Value = Mathf.Min(_healthManager._currentHP, newMaxHealth);
+		GD.Print("Health bar updated: Max Health = " + newMaxHealth);
+	}
+	
+	public void ResetHealthBar()
+	{
+		_healthManager._maxHP = 100;
+		_healthBar.MaxValue = 100;
+		_healthBar.Value = Mathf.Min(_healthManager._currentHP, 100);
+		GD.Print("Health bar reset to original settings.");
 	}
 }

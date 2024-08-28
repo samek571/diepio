@@ -100,6 +100,7 @@ public class UpgradeManager
                     break;
                 case "Health":
                     statData.value += 20f;
+                    _audioPlayer.GetParent<Player>().UpdateHealthBar(statData.value);
                     break;
                 case "BodyDamage":
                     statData.value += 5f;
@@ -147,6 +148,7 @@ public class UpgradeManager
         _levelManager._upgradePoints += _levelManager._spentPoints;
         _levelManager._spentPoints = 0;
 
+        _audioPlayer.GetParent<Player>().ResetHealthBar();
         GD.Print("All upgrades have been reset, and points have been refunded!");
         PlayUpgradeSound("upgrade_reset");
     }
