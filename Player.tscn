@@ -27,3 +27,7 @@ offset_left = -58.0
 offset_top = 29.0
 offset_right = 65.0
 offset_bottom = 56.0
+
+[node name="ProgressBar2" type="ProgressBar" parent="."]
+offset_right = 4.0
+offset_bottom = 27.0
