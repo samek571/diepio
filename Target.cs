@@ -5,7 +5,6 @@ using System.Linq;
 
 public partial class Target : RigidBody2D
 {
-
 	private int _currentHP;
 	private int _xpValue;
 	public float _targetDamage = 3.1415f;

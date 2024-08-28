@@ -93,7 +93,6 @@ public partial class Player : RigidBody2D
 		//healthbar
 		_healthManager._currentHP = Health;
 		_healthBar = GetNode<ProgressBar>("ProgressBar");
-		UpdateHealthBar();
 		_healthBar.MaxValue = Health;
 		_healthBar.Value = _healthManager._currentHP;
 		
@@ -305,9 +304,7 @@ public partial class Player : RigidBody2D
 	public void TakeDamage(float damage)
 	{
 		_healthManager._currentHP -= damage;
-		var _currentHealth = Mathf.Clamp(_healthManager._currentHP, 0, Health);
-		
-		_healthBar.Value -= _currentHealth;
+		_healthBar.Value -= Mathf.Clamp(_healthManager._currentHP, 0, Health);
 	}
 	
 	private void OnPlayerDied()
@@ -331,9 +328,19 @@ public partial class Player : RigidBody2D
 		return GlobalPosition;
 	}
 	
-	private void UpdateHealthBar()
+	public void UpdateHealthBar(float newMaxHealth)
 	{
-		_healthBar.MaxValue = Health;
-		_healthBar.Value = _healthManager._currentHP;
+		_healthManager._maxHP = newMaxHealth;
+		_healthBar.MaxValue = newMaxHealth;
+		_healthBar.Value = Mathf.Min(_healthManager._currentHP, newMaxHealth);
+		GD.Print("Health bar updated: Max Health = " + newMaxHealth);
+	}
+	
+	public void ResetHealthBar()
+	{
+		_healthManager._maxHP = 100;
+		_healthBar.MaxValue = 100;
+		_healthBar.Value = Mathf.Min(_healthManager._currentHP, 100);
+		GD.Print("Health bar reset to original settings.");
 	}
 }
