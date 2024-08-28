@@ -44,6 +44,8 @@ public partial class Player : RigidBody2D
 	private HealthManager _healthManager;
 	private PackedScene _enemyScene;
 
+	private ProgressBar _healthBar;
+	
 	public override void _Ready()
 	{
 		GravityScale = 0;
@@ -87,6 +89,12 @@ public partial class Player : RigidBody2D
 		_collisionCooldownTimer.OneShot = true;
 		AddChild(_collisionCooldownTimer);
 		_collisionCooldownTimer.Timeout += () => _collisionCooldown = false;
+		
+		_healthManager._currentHP = Health;
+		_healthBar = GetNode<ProgressBar>("ProgressBar");
+		_healthBar.MaxValue = Health;
+		_healthBar.Value = _healthManager._currentHP;
+		
 	}
 	public override void _Process(double delta)
 	{
@@ -95,6 +103,7 @@ public partial class Player : RigidBody2D
 		_healthManager.UpdateTimeSinceLastDamage((float)delta);
 		_healthManager.Heal((float)delta);
 		_upgradeManager.HandleUpgradeInputs();
+		_healthBar.Value = _healthManager._currentHP;
 	}
 	public override void _PhysicsProcess(double delta)
 	{
@@ -293,7 +302,10 @@ public partial class Player : RigidBody2D
 	
 	public void TakeDamage(float damage)
 	{
-		_healthManager.TakeDamage(damage);
+		_healthManager._currentHP -= damage;
+		var _currentHealth = Mathf.Clamp(_healthManager._currentHP, 0, Health);
+		
+		_healthBar.Value -= _currentHealth;
 	}
 	
 	private void OnPlayerDied()
