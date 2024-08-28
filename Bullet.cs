@@ -30,11 +30,14 @@ public partial class Bullet : Area2D
 	public override void _Process(double delta)
 	{
 		_elapsedTime += (float)delta;
-
-		//float remainingFraction = Mathf.Max(0, 1 - (_elapsedTime / BulletDurability));
-		//BulletSpeed = _initialSpeed * remainingFraction; //linear
 		
-		BulletSpeed = _initialSpeed * Mathf.Pow(0.3f, _elapsedTime); //exponential
+		//linear
+		//float remainingFraction = Mathf.Max(0, 1 - (_elapsedTime / BulletDurability));
+		//BulletSpeed = _initialSpeed * remainingFraction; 
+		
+		
+		//exponential
+		BulletSpeed = _initialSpeed * Mathf.Pow(0.3f, _elapsedTime); 
 		
 		Position += Direction * (float)delta * BulletSpeed;
 	}
