@@ -63,7 +63,8 @@ public partial class Bullet : Area2D
 	{
 		if (body is Target target)
 		{
-			Vector2 impulse = Direction * BulletDamage;
+			var bulletStrenght = 2.5f;
+			Vector2 impulse = Direction * BulletDamage * bulletStrenght;
 			target.ApplyCentralImpulse(impulse);
 
 			target.Call("TakeDamage", BulletDamage);
