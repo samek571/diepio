@@ -1,5 +1,7 @@
 namespace diep;
 using Godot;
+using System;
+
 
 public partial class Player : RigidBody2D
 {
@@ -16,7 +18,7 @@ public partial class Player : RigidBody2D
 	//target
 	[Export] public PackedScene TargetScene = (PackedScene)ResourceLoader.Load("res://Target.tscn");
 	[Export] public int TargetSpawnRange = 350;
-	private float targetSpawnTime = 2.2f;
+	private float _targetSpawnTime = 2.2f;
 	
 	//enemy	
 	[Export] public PackedScene EnemyScene = (PackedScene)ResourceLoader.Load("res://Enemy.tscn");
@@ -230,7 +232,7 @@ public partial class Player : RigidBody2D
 
 		float randomInterval = rng.RandfRange(-1.0f, 1.0f);
 
-		_spawnTimer.WaitTime = targetSpawnTime + randomInterval;
+		_spawnTimer.WaitTime = _targetSpawnTime + randomInterval;
 		_spawnTimer.Start();
 	}
 
@@ -312,6 +314,20 @@ public partial class Player : RigidBody2D
 		_healthManager.Heal(HealingSpeed);
 	}
 	
+	private void FreeAllNodes() {
+		var nodes = GetTree().GetNodesInGroup("all");
+		foreach (Node n in nodes) {
+			if (n.IsInsideTree()) {
+				n.QueueFree();
+			}
+		}
+	}
+	private void ResetGame()
+	{
+		FreeAllNodes();
+		GetTree().ReloadCurrentScene();
+	}
+	
 	public void TakeDamage(float damage)
 	{
 		_healthManager._currentHP -= damage;
@@ -322,7 +338,11 @@ public partial class Player : RigidBody2D
 	{
 		GD.Print("Player has died!");
 		QueueFree();
+		GetTree().Quit();
+		//return; //is an easy fix of course but lets not make it so dirty-cheap
 	}
+	
+	
 	private void InitializeXPBar()
 	{
 		_xpBar = new ProgressBar();
